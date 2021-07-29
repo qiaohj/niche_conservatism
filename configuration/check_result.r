@@ -2,17 +2,44 @@ library(dplyr)
 library(ggplot2)
 library(RSQLite)
 library(DBI)
+setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 base_db<-"../Configuration/conf.sqlite"
 mydb <- dbConnect(RSQLite::SQLite(), base_db)
 simulations<-dbReadTable(mydb, "simulations")
 dbDisconnect(mydb)
 
-#simulations<-simulations[which(simulations$is_run==1),]
+
 i=1
-for (i in c(1:simulations)){
-  print(paste(i, nrow(simulations)))
+
+if (F){
+  simulations<-simulations[which(simulations$is_run==1),]
+  simulations<-simulations[
+    which(simulations$global_id %in% c(27790, 25837, 24109,
+                                       54786, 19759, 13651,
+                                       17569, 18517, 4497,
+                                       4847, 9898, 11847,
+                                       40440, 23724)),]
+}
+cmd_rm<-c()
+cmd_mv<-c()
+#simulations<-simulations[which(simulations$nb=="NARROW"),]
+simulations<-simulations[which(simulations$nb=="BROAD"),]
+simulations<-simulations[which(simulations$da=="GOOD"),]
+simulations<-simulations[which(simulations$species_evo_level==0),]
+simulations<-simulations[which(simulations$species_evo_type==7),]
+large_memory<-c("/media/huijieqiao/Butterfly/Niche_Conservatism/Results/13506_GOOD_BROAD_4_0.01_0")
+
+for (i in c(1:nrow(simulations))){
+  
   item<-simulations[i,]
-  folder<-sprintf("../Results/%s", item$label)
+  folder<-sprintf("/media/huijieqiao/Butterfly/Niche_Conservatism/Results/%s", item$label)
+  if (folder %in% large_memory){
+    next()
+  }
+  target<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
+  
+  print(paste(i, nrow(simulations), folder))
+  
   if (file.exists(folder)){
     log<-sprintf("%s/%s.sqlite", folder, item$label)
     passed<-T
@@ -21,17 +48,35 @@ for (i in c(1:simulations)){
       trees<-dbReadTable(mydb, "trees")
       dbDisconnect(mydb)
       if (nrow(trees)==2){
+        tree_str<-trees[1, "CONTENT"]
+        if (nchar(tree_str)<10){
+          asdfasdf
+        }
         sp.log<-sprintf("%s/%s.sp.log", folder, item$label)
         if (file.exists(sp.log)){
-          
         }else{
           passed<-F
         }
       }else{
         passed<-F
+        
       }
     }else{
       passed<-F
     }
+    if (!passed){
+      cmd_rm<-c(cmd_rm, sprintf("rm -rf %s", folder))
+    }else{
+      if (item$is_run==0){
+        cmd_mv<-c(cmd_mv, sprintf("mv %s %s", folder, target))
+      }
+      if (item$species_evo_level==1){
+        cmd_mv<-c(cmd_mv, sprintf("mv %s %s", folder, target))
+      }
+      
+    }
   }
 }
+write.table(cmd_rm, "../Data/temp/rm2.sh", row.names = F, quote=F, col.names = F)
+write.table(cmd_mv, "../Data/temp/mv2.sh", row.names = F, quote=F, col.names = F)
+
