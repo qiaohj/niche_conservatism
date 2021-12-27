@@ -26,16 +26,13 @@ cmd_mv<-c()
 simulations<-simulations[which(simulations$nb=="BROAD"),]
 simulations<-simulations[which(simulations$da=="GOOD"),]
 simulations<-simulations[which(simulations$species_evo_level==0),]
-simulations<-simulations[which(simulations$species_evo_type==7),]
-large_memory<-c("/media/huijieqiao/Butterfly/Niche_Conservatism/Results/13506_GOOD_BROAD_4_0.01_0")
+simulations<-simulations[which(simulations$species_evo_type %in% c(2,3,4)),]
 
 for (i in c(1:nrow(simulations))){
   
   item<-simulations[i,]
   folder<-sprintf("/media/huijieqiao/Butterfly/Niche_Conservatism/Results/%s", item$label)
-  if (folder %in% large_memory){
-    next()
-  }
+  
   target<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
   
   print(paste(i, nrow(simulations), folder))
@@ -67,16 +64,16 @@ for (i in c(1:nrow(simulations))){
     if (!passed){
       cmd_rm<-c(cmd_rm, sprintf("rm -rf %s", folder))
     }else{
-      if (item$is_run==0){
+      #if (item$is_run==0){
         cmd_mv<-c(cmd_mv, sprintf("mv %s %s", folder, target))
-      }
-      if (item$species_evo_level==1){
-        cmd_mv<-c(cmd_mv, sprintf("mv %s %s", folder, target))
-      }
+      #}
+      #if (item$species_evo_level==1){
+      #  cmd_mv<-c(cmd_mv, sprintf("mv %s %s", folder, target))
+      #}
       
     }
   }
 }
-write.table(cmd_rm, "../Data/temp/rm2.sh", row.names = F, quote=F, col.names = F)
-write.table(cmd_mv, "../Data/temp/mv2.sh", row.names = F, quote=F, col.names = F)
+write.table(cmd_rm, "../Data/temp/rm.sh", row.names = F, quote=F, col.names = F)
+write.table(cmd_mv, "../Data/temp/mv.sh", row.names = F, quote=F, col.names = F)
 
