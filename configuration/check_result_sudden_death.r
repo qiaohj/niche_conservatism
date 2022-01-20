@@ -14,9 +14,8 @@ i=1
 
 
 
-simulations<-simulations[species_evo_level==0]
+simulations<-simulations[species_evo_level==1]
 simulations<-simulations[directional_speed!=1]
-
 
 #seed<-unique(simulations[, c("global_id", "da", "nb", "species_evo_type",                       
 #                             "directional_speed", "species_evo_level")])
@@ -24,7 +23,7 @@ cols<-c("global_id", "da", "nb")
 seed<-unique(simulations[, ..cols])
 #seed<-seed[(!((da=="GOOD")&(nb=="BROAD")))]
 #seed<-seed[(((da=="GOOD")&(nb=="BROAD")))]
-
+seed<-seed[(!((da=="GOOD")))]
 
 seed<-seed[sample(nrow(seed), nrow(seed))]
 #seed<-seed[global_id==31500]
@@ -43,7 +42,7 @@ for (i in c(1:nrow(seed))){
   for (j in c(1:nrow(item_sim))){
     item_sim2<-item_sim[j]
     if (is_QNAS){
-      folder<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.log", 
+      folder<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.log", 
                     item_sim2$label, item_sim2$label)  
     }else{
       folder<-sprintf("/media/huijieqiao/Butterfly/Niche_Conservatism/Results/%s/%s.log", 
@@ -66,7 +65,7 @@ for (i in c(1:nrow(seed))){
       for (k in c(1:nrow(problems))){
         if (is_QNAS){
           cmd_rm<-c(cmd_rm, sprintf("rm -rf %s", 
-                                sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s", 
+                                sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s", 
                                         problems[k]$label) ))
         }else{
           cmd_rm<-c(cmd_rm, sprintf("rm -rf %s", 

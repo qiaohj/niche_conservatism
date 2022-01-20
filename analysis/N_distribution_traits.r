@@ -13,6 +13,8 @@ library(ggtree)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
+setDTthreads(1)
+print(sprintf("Number of core(s) is(are) %d.", getDTthreads()))
 if (F){
   sub_seeds<-c(27790,25837,24109,54786,19759,13651,17569,18517,4497,4847,9898,11847,40440,23724)
   #species_evo_type
@@ -58,20 +60,29 @@ dbDisconnect(mydb)
 
 
 i=233
-simulations<-simulations[which((simulations$global_id==27464)&
-                                 (simulations$nb=="NARROW")&
-                                 (simulations$da=="GOOD")&
-                                 (simulations$species_evo_level==0)),]
+if (F){
+  simulations<-simulations[which((simulations$global_id==27464)&
+                                   (simulations$nb=="NARROW")&
+                                   (simulations$da=="GOOD")&
+                                   (simulations$species_evo_level==0)),]
+  
+  
+  #simulations<-simulations[which(simulations$nb=="NARROW"),]
+  simulations<-simulations[which((simulations$nb=="NARROW")&
+                                   (simulations$da=="GOOD")&
+                                   (simulations$species_evo_type %in% c(2))&
+                                   (simulations$is_run==1)&
+                                   (simulations$species_evo_level==0)),]
+  simulations<-simulations[which(!((simulations$da=="GOOD")&(simulations$nb=="BROAD"))),]
+}
+simulations<-simulations[which(((simulations$nb=="BROAD"))),]
+simulations<-simulations[which(simulations$species_evo_level==0),]
+simulations<-simulations[which(simulations$is_run==1),]
+#simulations<-simulations[which(simulations$species_evo_type %in% c(4)),]
+  
+table(simulations$species_evo_type)
 
-
-#simulations<-simulations[which(simulations$nb=="NARROW"),]
-simulations<-simulations[which((simulations$nb=="NARROW")&
-                                 (simulations$da=="GOOD")&
-                                 (simulations$species_evo_type %in% c(2))&
-                                 (simulations$is_run==1)&
-                                 (simulations$species_evo_level==0)),]
-
-
+table(simulations[, c("nb", "da")])
 
 if (F){
   mask<-readRDS("../old_data/ENV/mask_df.rda")
@@ -85,7 +96,7 @@ mask<-readRDS("../Data/mask_lonlat.rda")
 #all_df<-simulations[which(simulations$global_id %in% sub_seeds),]
 all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
-
+item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==28479&species_evo_type==2&directional_speed==0.1]
 
 for (i in c(1:nrow(all_df))){
   
@@ -94,8 +105,11 @@ for (i in c(1:nrow(all_df))){
   
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)
   print(paste(i, nrow(all_df), sp))
-  ttt<-sprintf("../Results/%s/%s.N.csv", sp, sp)
-  #ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.csv", sp, sp)
+  #ttt<-sprintf("../Results/%s/%s.N.csv", sp, sp)
+  ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.N.rda", sp, sp)
+  #ttt2<-sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp)
+  ttt2<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.rda", sp, sp)
+  
   if (file.exists(ttt)){
     #size<-file.size(ttt)
     #if (size<100){
@@ -106,12 +120,14 @@ for (i in c(1:nrow(all_df))){
   }
   #next()
   log<-sprintf("../Results/%s/%s.sqlite", sp, sp)
+  #log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.sqlite", sp, sp)
+  
   if (!file.exists(log)){
     next()
   }
-  #log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.sqlite", sp, sp)
-  sp.log<-sprintf("../Results/%s/%s.sp.log", sp, sp)
-  #sp.log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.sp.log", sp, sp)
+  
+  #sp.log<-sprintf("../Results/%s/%s.sp.log", sp, sp)
+  sp.log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.sp.log", sp, sp)
   saveRDS(NULL, ttt)
   
   mydb <- dbConnect(RSQLite::SQLite(), log)
@@ -142,7 +158,7 @@ for (i in c(1:nrow(all_df))){
   nodes[(type=="leaf")&(to==0), "event"]<-"NONE"
   nodes[(type=="leaf")&(to!=0), "event"]<-"EXTINCTION"
   df<-data.table(read.table(sprintf("../Results/%s/%s.log", sp, sp), head=F, sep=",", stringsAsFactors = F))
-  #df<-data.table(read.table(sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.log", sp, sp), 
+  #df<-data.table(read.table(sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.log", sp, sp), 
   #                          head=F, sep=",", stringsAsFactors = F))
   colnames(df)<-c("year", "global_id", "v3", "v4", "sp_id", "suitable")
   df<-df[suitable==1]
@@ -164,16 +180,34 @@ for (i in c(1:nrow(all_df))){
   
   event_df<-df[, .(N_SPECIES=length(unique(sp_id)),
                    N_SPECIATION=0,
-                   N_EXTINCTION=0), by="year"]
+                   N_EXTINCTION=0,
+                   N_SPECIATION_YEAR=0,
+                   N_EXTINCTION_YEAR=0), 
+               by="year"]
+  years<-data.table(year=c(0:1198))
+  event_df<-merge(event_df, years, by="year", all=T)
+  event_df[is.na(N_SPECIES)]$N_SPECIES<-0
+  event_df[is.na(N_SPECIATION)]$N_SPECIATION<-0
+  event_df[is.na(N_EXTINCTION)]$N_EXTINCTION<-0
+  event_df[is.na(N_SPECIATION_YEAR)]$N_SPECIATION_YEAR<-0
+  event_df[is.na(N_EXTINCTION_YEAR)]$N_EXTINCTION_YEAR<-0
+  
+  
+  
   for (j in c(1198:0)){
-    sub_df<-df[(year==j),]
+    #sub_df<-df[(year==j),]
     sub_node<-nodes[to>=j]
     event_df[year==j]$N_SPECIATION<-nrow(sub_node[event=="SPECIATION"])
     event_df[year==j]$N_EXTINCTION<-nrow(sub_node[event=="EXTINCTION"])
+    
+    sub_node<-nodes[to==j]
+    event_df[year==j]$N_SPECIATION_YEAR<-nrow(sub_node[event=="SPECIATION"])
+    event_df[year==j]$N_EXTINCTION_YEAR<-nrow(sub_node[event=="EXTINCTION"])
+    
   }
   saveRDS(event_df, ttt)
-  saveRDS(distribution_df, sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp))
-  #saveRDS(distribution_df, sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp))
+  #saveRDS(distribution_df, sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp))
+  saveRDS(distribution_df, sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.rda", sp, sp))
   
   #g4<-ggtree(vert.tree, root.position = vert.tree$root.edge)+theme_tree2()+xlim(0, 1200)
   #g4

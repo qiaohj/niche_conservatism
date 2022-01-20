@@ -50,9 +50,9 @@ dbDisconnect(mydb)
 
 i=1
 
-nb<-"BROAD"
+nb<-"NARROW"
 da<-"POOR"
-species_evo_level<-0
+species_evo_level<-1
 
 if (species_evo_level==0){
   simulations<-simulations[which((simulations$nb==nb)&
@@ -85,22 +85,28 @@ df_all<-list()
 i=3
 for (i in c(1:nrow(all_df))){
   
-  print(paste(i, nrow(all_df)))
+  print(paste(i, nrow(all_df), nb, da, species_evo_level))
   item<-all_df[i,]
   
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
               item$directional_speed, item$species_evo_level)
   #print(paste(i, nrow(all_df), sp))
+  
   if (species_evo_level==0){
-    ttt<-sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp)
-  }else{
-    if (item$species_evo_type==1){
+    if ((nb=="BROAD")&(da=="GOOD")){
       ttt<-sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp)
     }else{
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s.DISTRIBUTION.csv", sp)  
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)  
     }
-    
+  }else{
+    if (item$species_evo_type==1){
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)  
+    }else{
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.csv", sp, sp) 
+    }
   }
+  
+  
   if (!file.exists(ttt)){
     #print("skip")
     #next()
