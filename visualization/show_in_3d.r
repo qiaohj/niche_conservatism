@@ -13,7 +13,7 @@ library(geiger)
 library(stringr)
 library(plotKML)
 library(ggtree)
-require(phylobase)
+library(phylobase)
 library(ggpubr)
 if (F){
   base_db<-sprintf("%s/Configuration/env_Hadley3D.sqlite", "../")
