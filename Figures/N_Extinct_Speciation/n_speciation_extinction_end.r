@@ -1,6 +1,7 @@
 library(ggplot2)
 library(ggthemes)
 library(data.table)
+setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 if (F){
   d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD_0.rda")
   d1$species_evo_level<-0
@@ -110,25 +111,78 @@ if (F){
 
 d_se<-readRDS("../Figures/N_Species/figure_data.rda")
 d_se_seed<-readRDS("../Figures/N_Species/d_se_seed.rda")
+source("commons/functions.r")
+#1: conservatism
+#2: shift-directional
+#3: expansion-directional
+#4: expansion-omnidirectional
+#5: random-central
+#6: random-symmetrical
+#7: random-asymmetrical
+d_se<-d_se[species_evo_level==0]
+d_se$evo_type<-format_evoType(d_se$species_evo_type)
 
-p<-ggplot(d_se[year==0&species_evo_level==0])+geom_bar(aes(x=label2, y=N_SPECIES, fill=label), 
-                                                       stat = "identity", position = position_dodge(0.9))+
+d_se_all<-d_se[, .(N_SPECIES=sum(N_SPECIES),
+                   N_SPECIATION=sum(N_SPECIATION),
+                   N_EXTINCTION=sum(N_EXTINCTION)),
+               by=list(species_evo_level, species_evo_type, directional_speed, year, evo_type)]
+cor(d_se$N_SPECIES, d_se$N_SPECIATION)
+
+cols<-c("N_SPECIES", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type")
+d_se_all_fig1<-d_se_all[, ..cols]
+colnames(d_se_all_fig1)[1]<-"N"
+d_se_all_fig1$type<-"Number of species"
+
+cols<-c("N_SPECIATION", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type")
+d_se_all_fig2<-d_se_all[, ..cols]
+colnames(d_se_all_fig2)[1]<-"N"
+d_se_all_fig2$type<-"Number of speciation"
+
+cols<-c("N_EXTINCTION", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type")
+d_se_all_fig3<-d_se_all[, ..cols]
+colnames(d_se_all_fig3)[1]<-"N"
+d_se_all_fig3$type<-"Number of extinction"
+d_se_all_fig<-rbindlist(list(d_se_all_fig1, d_se_all_fig2, d_se_all_fig3))
+d_se_all_fig$type<-factor(d_se_all_fig$type, 
+                          levels=rev(c("Number of species", "Number of speciation", "Number of extinction")))
+d_se_all_fig$label<-format_evoType_amplitude(d_se_all_fig$evo_type, d_se_all_fig$directional_speed, order=-1)
+
+
+p<-ggplot(d_se_all_fig[year==0])+
+  geom_bar(aes(y=label, x=N, fill=type), position="dodge2", stat = "identity")+
+  theme_bw()+
+  theme(axis.text.x=element_text(angle=-90, hjust=0, vjust=0))+
+  labs(fill="", y="")+
   scale_fill_colorblind()
+p
+ggsave("../Figures/N_Species/n_species_speciation_extinction.png", width=8, height=6)
+
+d_se$label2<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, order=-1)
+#d_se$label<-factor(d_se$label, levels = c("B"))
+p<-ggplot(d_se[year==0&species_evo_level==0])+
+  geom_bar(aes(y=label2, x=N_SPECIES, fill=label), 
+           stat = "identity", position = position_dodge(0.9))+
+  labs(x="", y="Number of species", fill="niche breadth & dispersal ability")+
+  scale_fill_colorblind()+
+  
+  theme_bw()
 
 p
-ggsave(p, filename="../Figures/N_Species/N_Species_end.png", width=12, height=10)
+ggsave(p, filename="../Figures/N_Species/N_Species_end.png", width=8, height=6)
 
 p<-ggplot(d_se[year<1198&species_evo_level==0])+
-  geom_line(aes(x=year*-1, y=N_SPECIES, color=factor(species_evo_type), linetype=factor(directional_speed)))+
+  geom_line(aes(x=year*-0.1, y=N_SPECIES, color=evo_type, linetype=factor(directional_speed)))+
+  labs(x="X k years before present", y="Number of species", color="Evolution type", linetype="Evolution rate")+
   theme_bw()+
-  scale_fill_colorblind()+
-  facet_wrap(~label, scale="free")+
+  scale_color_colorblind()+
+  facet_grid(nb~da, scale="free")+
   scale_y_log10()
 
 p
 
 
-ggsave(p, filename="../Figures/N_Species/N_Species.png", width=12, height=10)
+ggsave(p, filename="../Figures/N_Species/N_Species.png", width=12, height=6)
+
 p<-ggplot(d_se_seed)+
   geom_line(aes(x=year*-1, y=N_SEED, color=factor(species_evo_type), 
                 linetype=factor(directional_speed)))+
@@ -140,25 +194,97 @@ p
 ggsave(p, filename="../Figures/N_Species/N_Seed.png", width=12, height=10)
 
 p<-ggplot(d_se[year<1198&species_evo_level==0])+
-  geom_line(aes(x=year*-1, y=N_SPECIATION, color=factor(species_evo_type), linetype=factor(directional_speed)))+
+  geom_line(aes(x=year*-0.1, y=N_SPECIATION, color=evo_type, linetype=factor(directional_speed)))+
+  labs(x="X k years before present", y="Number of speciations", color="Evolution type", linetype="Evolution rate")+
   theme_bw()+
-  scale_fill_colorblind()+
-  facet_wrap(~label, scale="free")
-  
-p
-ggsave(p, filename="../Figures/N_Species/N_SPECIATION.png", width=12, height=10)
-
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
-  geom_line(aes(x=year*-1, y=N_EXTINCTION, color=factor(species_evo_type), linetype=factor(directional_speed)))+
-  theme_bw()+
-  scale_fill_colorblind()+
-  facet_wrap(~label, scale="free")
+  scale_color_colorblind()+
+  facet_grid(nb~da, scale="free")+
+  scale_y_log10()
 
 p
-ggsave(p, filename="../Figures/N_Species/N_EXTINCTION.png", width=12, height=10)
+ggsave(p, filename="../Figures/N_Species/N_SPECIATION.png", width=12, height=6)
 
 p<-ggplot(d_se[year<1198&species_evo_level==0])+
-  geom_line(aes(x=year*-1, y=N_SPECIATION_YEAR, color=factor(species_evo_type), linetype=factor(directional_speed)))+
+  geom_line(aes(x=year*-0.1, y=N_EXTINCTION, color=evo_type, linetype=factor(directional_speed)))+
+  labs(x="X k years before present", y="Number of extinctions", color="Evolution type", linetype="Evolution rate")+
+  theme_bw()+
+  scale_color_colorblind()+
+  facet_grid(nb~da, scale="free")+
+  scale_y_log10()
+
+
+p
+
+
+ggsave(p, filename="../Figures/N_Species/N_EXTINCTION.png", width=12, height=6)
+
+
+p<-ggplot(d_se[year<1198&species_evo_level==0])+
+  geom_line(aes(x=year*-0.1, y=N_EXTINCTION * 1000 / (N_SPECIES + N_EXTINCTION), color=evo_type, linetype=factor(directional_speed)))+
+  labs(x="X k years before present", y="Number of extinctions per 1k species", color="Evolution type", linetype="Evolution rate")+
+  theme_bw()+
+  scale_color_colorblind()+
+  facet_grid(nb~da, scale="free")
+
+#d_se[year<1198&species_evo_level==0&N_EXTINCTION>N_SPECIES]
+p
+
+
+ggsave(p, filename="../Figures/N_Species/N_EXTINCTION_Rate.png", width=12, height=6)
+
+p<-ggplot(d_se[year<1198&species_evo_level==0])+
+  geom_line(aes(x=year*-0.1, y=N_SPECIATION * 1000 / (N_SPECIES + N_EXTINCTION), 
+                color=evo_type, linetype=factor(directional_speed)))+
+  labs(x="X k years before present", y="Number of speciations per 1k species", color="Evolution type", linetype="Evolution rate")+
+  theme_bw()+
+  scale_color_colorblind()+
+  facet_grid(nb~da, scale="free")
+
+#d_se[year<1198&species_evo_level==0&N_EXTINCTION>N_SPECIES]
+p
+
+
+ggsave(p, filename="../Figures/N_Species/N_SPECIATION_Rate.png", width=12, height=6)
+
+d_se$label3<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, order=1)
+p<-ggplot(d_se[year==0&species_evo_level==0])+
+  geom_point(aes(x=label3, y=N_SPECIATION * 1000 / (N_SPECIES + N_EXTINCTION), color=label), 
+             position = position_dodge2(0.1))+
+  labs(x="Evolution type", y="Number of speciations per 1k species", 
+       color="niche breadth & dispersal ability")+
+  theme_bw()+
+  theme(axis.text.x=element_text(angle=-90, hjust=0, vjust=0))+
+  scale_color_colorblind()
+
+
+#d_se[year<1198&species_evo_level==0&N_EXTINCTION>N_SPECIES]
+p
+
+
+ggsave(p, filename="../Figures/N_Species/N_SPECIATION_Rate_end.png", width=12, height=6)
+
+p<-ggplot(d_se[year==0&species_evo_level==0])+
+  geom_point(aes(x=label3, y=N_EXTINCTION * 1000 / (N_SPECIES + N_EXTINCTION), color=label), 
+             position = position_dodge2(0.1))+
+  labs(x="Evolution type", y="Number of extionctions per 1k species", 
+       color="niche breadth & dispersal ability")+
+  theme_bw()+
+  theme(axis.text.x=element_text(angle=-90, hjust=0, vjust=0))+
+  scale_color_colorblind()
+
+
+#d_se[year<1198&species_evo_level==0&N_EXTINCTION>N_SPECIES]
+p
+
+
+ggsave(p, filename="../Figures/N_Species/N_EXTINCTION_Rate_end.png", width=12, height=6)
+
+
+
+
+p<-ggplot(d_se[year<1198&species_evo_level==0])+
+  geom_line(aes(x=year*-1, y=N_SPECIATION_YEAR, 
+                color=factor(species_evo_type), linetype=factor(directional_speed)))+
   theme_bw()+
   scale_fill_colorblind()+
   facet_wrap(~label, scale="free")

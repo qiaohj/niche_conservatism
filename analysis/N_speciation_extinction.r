@@ -39,6 +39,7 @@ all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 #item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==1361&species_evo_type==2&directional_speed==0.1]
 #item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==1567&species_evo_type==2&directional_speed==0.1]
+i=1
 
 for (i in c(1:nrow(all_df))){
   

@@ -213,3 +213,4 @@ for (i in c(1:nrow(all_df))){
   #g4
 }
 #saveRDS(event_df, "../Data/Sample_N.rda")
+event_df<-readRDS("../Data/Sample_N.rda")
