@@ -50,4 +50,11 @@ format_evoType_amplitude<-function(evoType, amplitude, order=1){
   evo_type<-factor(evo_type, levels=evo_type_amps)
 }
 
+safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
+                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
+                             
+colorBlindGrey8   <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
+                                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
+bg<-"#f6f6f6"
+  

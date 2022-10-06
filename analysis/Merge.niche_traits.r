@@ -57,7 +57,7 @@ for (i in c(1:nrow(all_df))){
       base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
     }
   }
-  ttt<-sprintf("%s/%s/%s.sp.rda", base, sp, sp)
+  ttt<-sprintf("%s/%s/%s.niche_traits.rda", base, sp, sp)
   
   if (!file.exists(ttt)){
     print("not exist, skip")
@@ -82,10 +82,24 @@ for (i in c(1:nrow(all_df))){
   df_all[[length(df_all)+1]]<-dddd
   
 }
-df_all<-rbindlist(df_all)
-saveRDS(df_all, "../Data/niche_traits.rda")
 
-niche_traits_se<-df_all[, .(V_range=mean(V_range), sd_V_range=sd(V_range)),
+
+df_all1<-rbindlist(df_all[1:30000])
+df_all2<-rbindlist(df_all[30001:length(df_all)])
+df_species_evo_level_1<-rbindlist(list(df_all1[species_evo_level==1],
+                                       df_all2[species_evo_level==1]))
+df_species_evo_level_0<-rbindlist(list(df_all1[species_evo_level==0],
+                                       df_all2[species_evo_level==0]))
+
+saveRDS(df_species_evo_level_1, "../Data/niche_traits_species_evo_level_1.rda")
+saveRDS(df_species_evo_level_0, "../Data/niche_traits_species_evo_level_0.rda")
+
+df<-readRDS("/media/huijieqiao/QNAS/Niche_Conservatism/Data/niche_traits_species_evo_level_0.rda")
+
+niche_traits_se<-df[, .(V_range=mean(V_range), sd_V_range=sd(V_range)),
                         by=list(year, evo_type, nb, da, V_L,
-                                species_evo_type, directional_speed, species_evo_level)]
+                                species_evo_type, directional_speed, 
+                                species_evo_level)]
+
 saveRDS(niche_traits_se, "../Data/niche_traits_se.rda")
+

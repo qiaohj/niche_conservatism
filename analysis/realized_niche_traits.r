@@ -5,7 +5,7 @@ library(DBI)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
-setDTthreads(30)
+setDTthreads(1)
 print(sprintf("Number of core(s) is(are) %d.", getDTthreads()))
 
 base_db<-"../Configuration/env_Hadley3D.sqlite"
@@ -26,9 +26,10 @@ dbDisconnect(mydb)
 
 i=233
 
-#simulations<-simulations[which(((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
-#simulations<-simulations[which(simulations$species_evo_level==0),]
+simulations<-simulations[which(((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
+simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
+#simulations<-simulations[which(!((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
 #simulations<-simulations[which(simulations$species_evo_type %in% c(4)),]
 
 table(simulations$species_evo_type)
@@ -56,78 +57,59 @@ for (i in c(1:nrow(all_df))){
     next()
   }
   
+  if ((item$species_evo_level==1)){
+    print("1 skip")
+    next()
+  }
+  
+  
   if (item$species_evo_level==1){
     base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results_1"
   }else{
-    if ((item$nb=="BROAD")&(item$da=="GOOD")){
-      
-      base<-"../Results"
-    }else{
-      base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
-    }
+    base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
   }
-  ttt<-sprintf("%s/%s/%s.niche_traits.rda", base, sp, sp)
+  ttt<-sprintf("%s/%s/%s.realized_niche_traits.rda", base, sp, sp)
   
   if (file.exists(ttt)){
     print("exist skip")
     next()
   }
   
-  log<-sprintf("%s/%s/%s.sp.log", base, sp, sp)
+  log<-sprintf("%s/%s/%s.log", base, sp, sp)
   
   if (!file.exists(log)){
     print("no log, skip")
     next()
   }
-  
   saveRDS(NULL, ttt)
   if (file.size(log)==0){
     next()
   }
   df<-fread(log)
-  
-  
-  if (ncol(df)==13){
-    colnames(df)<-c("year", "SP_ID",
-                    "V1_L", "V1_min", "V1_max",
-                    "V2_L", "V2_min", "V2_max",
-                    "V3_L", "V3_min", "V3_max", 
-                    "TT", "group_id")
-  }else{
-    colnames(df)<-c("year", "SP_ID",
-                    "V1_L", "V1_min", "V1_max",
-                    "V2_L", "V2_min", "V2_max",
-                    "V3_L", "V3_min", "V3_max", 
-                    "TT")
-    df$group_id<-1
+  colnames(df)<-c("year", "global_id", "group_id", "n_individual", "sp_id", "suitable")
+  df<-df[suitable==1]
+  if (nrow(df)==0){
+    next()
   }
+  df_tmin<-merge(df, v_min_temp, by=c("year", "global_id"))
+  df_tmin_se<-df_tmin[, .(N_CELLS=.N, N_Individual=sum(n_individual),
+                          min_v=min(v)),
+                      by=c("sp_id", "year")]
   
-  unique(df$V1_L)
+  df_tmax<-merge(df, v_max_temp, by=c("year", "global_id"))
+  df_tmax_se<-df_tmax[, .(max_v=max(v)),
+                      by=c("sp_id", "year")]
+  df_tmax_se$var<-"TEMP"
   
-  v_labels<-c("Debiased_Maximum_Monthly_Temperature",
-              "Debiased_Minimum_Monthly_Temperature",
-              "Debiased_Maximum_Monthly_Precipitation")
-  v_label_f<-"max_t"
-  df_all<-list()
-  i=1
-  for (v_label in v_labels){
-    for (i in c(1:3)){
-      item<-df[get(sprintf("V%d_L", i))==v_label]
-      cols<-c("year", "SP_ID", "group_id",
-              sprintf("V%d_L", i), sprintf("V%d_min", i), sprintf("V%d_max", i))
-      item<-item[, ..cols]
-      if (nrow(item)==0){
-        next()
-      }
-      colnames(item)<-c("year", "SP_ID", "group_id",
-                        "V_L", "V_min", "V_max")
-      df_all[[length(df_all)+1]]<-item
-    }
-  }
-  df_all<-rbindlist(df_all)
+  df_temp_se<-merge(df_tmax_se, df_tmin_se, by=c("sp_id", "year"))
+  df_prec<-merge(df, v_max_prec, by=c("year", "global_id"))
+  df_prec_se<-df_prec[, .(N_CELLS=.N, N_Individual=sum(n_individual),
+                          min_v=min(v), max_v=max(v)),
+                      by=c("sp_id", "year")]
+  df_prec_se$var<-"PREC"
   
-  df_all$V_mean<-(df_all$V_max+df_all$V_min)/2
-  df_all$V_range<-df_all$V_max-df_all$V_min
+  df_all<-rbindlist(list(df_temp_se, df_prec_se), use.names=T)
+  
   saveRDS(df_all, ttt)
 }
 
