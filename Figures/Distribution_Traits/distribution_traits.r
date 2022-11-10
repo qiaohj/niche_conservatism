@@ -4,12 +4,40 @@ library(ggthemes)
 library(RSQLite)
 library(DBI)
 library(sf)
+setDTthreads(20)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 if (F){
-  d<-readRDS("../Data/distribution_traits.rda")
+  d<-readRDS("/media/huijieqiao/QNAS/Niche_Conservatism/Data/distribution_traits.rda")
   d
+  
+  d_se2<-d[, .(N_CELLS=mean(N_CELLS),
+              SD_N_CELLS=sd(N_CELLS),
+              MIN_N_CELL=min(N_CELLS),
+              MAX_N_CELL=max(N_CELLS),
+              MEDIAN_N_CELL=quantile(N_CELLS, 0.5),
+              QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
+              QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
+          by=list(year, species_evo_type, directional_speed, species_evo_level)]
+  saveRDS(d_se2, "../Data/distribution_traits_se_without_nb_da.rda")
+  
+  d_se3<-d[, .(N_CELLS=mean(N_CELLS),
+               SD_N_CELLS=sd(N_CELLS),
+               MIN_N_CELL=min(N_CELLS),
+               MAX_N_CELL=max(N_CELLS),
+               MEDIAN_N_CELL=quantile(N_CELLS, 0.5),
+               QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
+               QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
+           by=list(year, species_evo_type, directional_speed, species_evo_level, nb)]
+  saveRDS(d_se3, "../Data/distribution_traits_se_without_da.rda")
+  
+  
   d_se<-d[, .(N_CELLS=mean(N_CELLS),
-              SD_N_CELLS=sd(N_CELLS)),
+              SD_N_CELLS=sd(N_CELLS),
+              MIN_N_CELL=min(N_CELLS),
+              MAX_N_CELL=max(N_CELLS),
+              MEDIAN_N_CELL=quantile(N_CELLS, 0.5),
+              QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
+              QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
           by=list(year, species_evo_type, directional_speed, nb, da, species_evo_level)]
   saveRDS(d_se, "../Data/distribution_traits_se.rda")
   
@@ -41,7 +69,7 @@ if (F){
   }
   d_sub<-rbindlist(d_sub)
   saveRDS(d_sub, "../Data/lat_gradient.rda")
-  
+  d_sub<-readRDS("../Data/lat_gradient.rda")
   n_species<-d[, .(N_Species=length(unique(sp_id))),
                by=list(year, species_evo_type, directional_speed,
                        nb, da, species_evo_level, global_id)]
@@ -50,6 +78,7 @@ if (F){
   iqr<-IQR(last$N_Species)
   sd<-sd(last$N_Species)
   mean<-mean(last$N_Species)
+  #mean+3*sd = 911.8022 
   last$is_outlier<-F
   last[N_Species>(mean+3*sd)]$is_outlier<-T
   table(last$is_outlier)
@@ -60,6 +89,7 @@ if (F){
   iqr<-IQR(last2$N_Species)
   sd<-sd(last2$N_Species)
   mean<-mean(last2$N_Species)
+  #mean+3*sd = 322.7872 
   last2$is_outlier<-F
   last2[N_Species>(mean+3*sd)]$is_outlier<-T
   table(last2$is_outlier)
@@ -70,19 +100,59 @@ if (F){
   outliers$year<-NULL
   outliers$N_Species<-NULL
   
+  saveRDS(outliers, "../Data/outliers_details.rda")
+  outliers_se<-outliers[, .(N=.N), by=list(species_evo_type, directional_speed,
+                                           nb, da, species_evo_level,
+                                           is_outlier)]
+  saveRDS(outliers_se, "../Data/N_outliers.rda")
+  
   d_sub_with_outliers<-merge(d_sub, outliers, 
                              by=c("species_evo_type", "directional_speed",
                                   "nb", "da", "species_evo_level",
-                                  "global_id","is_outlier"), all=T)
+                                  "global_id"), all=T)
   
-  
+  d_sub_with_outliers[is.na(is_outlier)]$is_outlier<-F
   saveRDS(d_sub_with_outliers, "../Data/lat_gradient_raw.rda")
+  d_sub_with_outliers<-readRDS("../Data/lat_gradient_raw.rda")
   
-  d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), N_CELLS=sum(N_CELLS)),
+  ooo<-d_sub_with_outliers[year==0 & is_outlier==T & species_evo_level==0, 
+                           .(N=length(unique(global_id))),
+                           by=list(species_evo_type, directional_speed,
+                                   nb, da)]
+  d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), 
+                                MEAN_N_Species=mean(N_Species),
+                                SD_N_Species=sd(N_Species),
+                                MEDIAN_N_Species=quantile(N_Species, 0.5),
+                                QUANTILE_25_N_Species=quantile(N_Species, 0.25),
+                                QUANTILE_75_N_Species=quantile(N_Species, 0.75),
+                                N_CELLS=sum(N_CELLS)),
                             by=list(year, species_evo_type, directional_speed,
                                     nb, da, species_evo_level,
                                     is_outlier, from, to, mid)]
+  
   saveRDS(d_se, "../Data/lat_gradient_nb_da.rda")
+  d_se_last_year_df<-d_sub_with_outliers[year==0]
+  d_se_last_year_df[, .(N_Species=sum(N_Species), 
+                        MEAN_N_Species=mean(N_Species),
+                        SD_N_Species=sd(N_Species),
+                        MEDIAN_N_Species=quantile(N_Species, 0.5),
+                        QUANTILE_25_N_Species=quantile(N_Species, 0.25),
+                        QUANTILE_75_N_Species=quantile(N_Species, 0.75),
+                        N_CELLS=sum(N_CELLS)),
+                    by=list(year, species_evo_level)]
+  
+  d_se_last_year<-d_se_last_year_df[, .(N_Species=sum(N_Species), 
+                                MEAN_N_Species=mean(N_Species),
+                                SD_N_Species=sd(N_Species),
+                                MEDIAN_N_Species=quantile(N_Species, 0.5),
+                                QUANTILE_25_N_Species=quantile(N_Species, 0.25),
+                                QUANTILE_75_N_Species=quantile(N_Species, 0.75),
+                                N_CELLS=sum(N_CELLS)),
+                            by=list(year, species_evo_type, directional_speed,
+                                    nb, da, species_evo_level,
+                                    is_outlier, from, to, mid)]
+  
+  saveRDS(d_se_last_year, "../Data/lat_gradient_nb_da_last_year.rda")
   
   d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), N_CELLS=sum(N_CELLS)),
                             by=list(year, species_evo_type, directional_speed,
@@ -90,12 +160,32 @@ if (F){
                                     is_outlier, from, to, mid)]
   saveRDS(d_se, "../Data/lat_gradient_outlier.rda")
   
-  d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), N_CELLS=sum(N_CELLS)),
+  d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), 
+                                MEAN_N_Species=mean(N_Species),
+                                SD_N_Species=sd(N_Species),
+                                MEDIAN_N_Species=quantile(N_Species, 0.5),
+                                QUANTILE_25_N_Species=quantile(N_Species, 0.25),
+                                QUANTILE_75_N_Species=quantile(N_Species, 0.75),
+                                N_CELLS=sum(N_CELLS)),
                             by=list(year, species_evo_type, directional_speed,
                                     species_evo_level,
                                     from, to, mid)]
   saveRDS(d_se, "../Data/lat_gradient_all.rda")
   
+  d_se_last_year_df<-d_sub_with_outliers[year==0]
+  d_se_last_year<-d_se_last_year_df[, .(N=.N,
+                                        SUM_N_Species=sum(N_Species), 
+                                        MEAN_N_Species=mean(N_Species),
+                                        SD_N_Species=sd(N_Species),
+                                        MEDIAN_N_Species=quantile(N_Species, 0.5),
+                                        QUANTILE_25_N_Species=quantile(N_Species, 0.25),
+                                        QUANTILE_75_N_Species=quantile(N_Species, 0.75),
+                                        N_CELLS=sum(N_CELLS)),
+                                    by=list(year, species_evo_type, directional_speed,
+                                            species_evo_level,
+                                            from, to, mid)]
+  
+  saveRDS(d_se_last_year, "../Data/lat_gradient_all_last_year.rda")
   
   
   setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
@@ -134,6 +224,27 @@ if (F){
 }
 source("commons/functions.r")
 d_se<-readRDS("../Data/distribution_traits_se.rda")
+d_se2<-readRDS("../Data/distribution_traits_se_without_nb_da.rda")
+d_se_large<-d_se[year==0 & nb=="BROAD" & species_evo_level==0]
+d_se_narrow<-d_se[year==0  & nb=="NARROW" & species_evo_level==0]
+d_se_nb<-merge(d_se_large, d_se_narrow, by=c("species_evo_type", "directional_speed", "da"))
+d_se_nb$change<-(d_se_nb$MEDIAN_N_CELL.x - d_se_nb$MEDIAN_N_CELL.y)/d_se_nb$MEDIAN_N_CELL.y
+range(d_se_nb[change>0]$change)
+write.csv(d_se_nb, "../Data/area_nb.csv", row.names = F)
+
+d_se_good<-d_se[year==0 & da=="GOOD" & species_evo_level==0]
+d_se_poor<-d_se[year==0  & da=="POOR" & species_evo_level==0]
+d_se_da<-merge(d_se_good, d_se_poor, by=c("species_evo_type", "directional_speed", "nb"))
+nrow(d_se_da[MEDIAN_N_CELL.x>MEDIAN_N_CELL.y])
+nrow(d_se_da[MEDIAN_N_CELL.x==MEDIAN_N_CELL.y])
+d_se_da[MEDIAN_N_CELL.x<MEDIAN_N_CELL.y]
+write.csv(d_se_da, "../Data/area_da.csv", row.names = F)
+#numbers
+d_se[year==0 & species_evo_level==0&species_evo_type==1]
+d_se2[year==0 & species_evo_level==0&species_evo_type==1]
+d_se2[year==0 & species_evo_level==0&species_evo_type==3&directional_speed==0.5]
+d_se2[year==0 & species_evo_level==0&species_evo_type==4&directional_speed==0.5]
+
 d_se$evo_type<-format_evoType(d_se$species_evo_type)
 d_se$label<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, order=-1)
 d[species_evo_level==0 & FROM_YEAR==1198]

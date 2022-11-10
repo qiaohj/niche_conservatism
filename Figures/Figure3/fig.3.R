@@ -11,10 +11,10 @@ d_se$evo_type<-format_evoType(d_se$species_evo_type)
 d_se$label<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, order=-1)
 
 p<-ggplot(d_se[species_evo_level==0 & year==0])+
-  geom_point(aes(x=N_CELLS, y=label, color=nb, shape=da), 
+  geom_point(aes(x=MEDIAN_N_CELL, y=label, color=nb, shape=da), 
              position=position_dodge(0.9))+
-  geom_errorbarh(aes(xmin=N_CELLS-SD_N_CELLS, 
-                     xmax=N_CELLS+SD_N_CELLS, 
+  geom_errorbarh(aes(xmin=QUANTILE_25_NCELL, 
+                     xmax=QUANTILE_75_NCELL, 
                      y=label, color=nb, linetype=da), 
                  position=position_dodge(width = 0.9))+
   #facet_grid(nb~da, scale="free")+

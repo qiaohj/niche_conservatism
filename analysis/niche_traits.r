@@ -18,6 +18,8 @@ v_min_temp<-data.table(v_min_temp)
 v_max_temp<-data.table(v_max_temp)
 v_max_prec<-data.table(v_max_prec)
 
+
+
 base_db<-"../Configuration/conf.sqlite"
 mydb <- dbConnect(RSQLite::SQLite(), base_db)
 simulations<-dbReadTable(mydb, "simulations")

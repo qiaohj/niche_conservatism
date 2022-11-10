@@ -36,6 +36,19 @@ v_min_temp<-dbReadTable(envdb, "Debiased_Minimum_Monthly_Temperature")
 v_max_temp<-dbReadTable(envdb, "Debiased_Maximum_Monthly_Temperature")
 v_max_prec<-dbReadTable(envdb, "Debiased_Maximum_Monthly_Precipitation")
 dbDisconnect(envdb)
+if (F){
+  colnames(v_min_temp)[2]<-"v_min"
+  colnames(v_max_temp)[2]<-"v_max"
+  v_temp<-merge(v_min_temp, v_max_temp, by=c("global_id", "year"))  
+  v_temp$v<-(v_temp$v_min + v_temp$v_max)/2
+  quantile(v_temp$v)
+  v_temp$v_range<-(v_temp$v_max - v_temp$v_min)
+  range(v_temp$v_range)
+  quantile(v_temp[year==1200]$v_range, c(0.05, 0.1, 0.5, 0.6, 0.95))
+  mean(v_temp[year==1200]$v_range)
+  
+  quantile(v_max_prec$v, c(0.5, 0.95))
+}
 nb_range<-list("BROAD"=c(60, 10),
                "NARROW"=c(40, 5))
 

@@ -57,7 +57,11 @@ if (F){
   #d_unique<-unique(d[, ..cols])
   d_end<-d[year==0]
   range(d_end$N_SPECIES)
-  d_se<-d[, .(N=.N, N_SPECIES=sum(N_SPECIES), SD_N_SPECIES=sd(N_SPECIES)),
+  d_se<-d[, .(N=.N, N_SPECIES=sum(N_SPECIES), SD_N_SPECIES=sd(N_SPECIES),
+              MEDIAN_N_SPECIES=quantile(N_SPECIES, 0.5),
+              QUANTILE_25_N_SPECIES=quantile(N_SPECIES, 0.25),
+              QUANTILE_75_N_SPECIES=quantile(N_SPECIES, 0.75)
+              ),
           by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year)]
   
   d_quantile<-d[year==0, .(N_99=quantile(N_SPECIES, 0.99)),
@@ -80,7 +84,7 @@ if (F){
   d$R_EXTINCTION_SPECIES<-d$N_EXTINCTION_YEAR/d$N_SPECIES
   d[is.nan(R_EXTINCTION_SPECIES)]$R_EXTINCTION_SPECIES<-0
   
-  d_se<-d[, .(N=.N, 
+  d_se<-d[N_SPECIES>0, .(N=.N, 
               N_SPECIES=sum(N_SPECIES), 
               N_SPECIATION=sum(N_SPECIATION),
               N_EXTINCTION=sum(N_EXTINCTION),
@@ -89,7 +93,16 @@ if (F){
               R_EXTINCTION_SPECIES=mean(R_EXTINCTION_SPECIES, na.rm=T),
               R_SPECIATION_SPECIES=mean(R_SPECIATION_SPECIES, na.rm=T),
               SD_R_EXTINCTION_SPECIES=sd(R_EXTINCTION_SPECIES, na.rm=T),
-              SD_R_SPECIATION_SPECIES=sd(R_SPECIATION_SPECIES, na.rm=T)
+              SD_R_SPECIATION_SPECIES=sd(R_SPECIATION_SPECIES, na.rm=T),
+              MEDIAN_N_SPECIES=quantile(N_SPECIES, 0.5),
+              QUANTILE_25_N_SPECIES=quantile(N_SPECIES, 0.25),
+              QUANTILE_75_N_SPECIES=quantile(N_SPECIES, 0.75),
+              MEDIAN_N_SPECIATION=quantile(N_SPECIATION, 0.5),
+              QUANTILE_25_N_SPECIATION=quantile(N_SPECIATION, 0.25),
+              QUANTILE_75_N_SPECIATION=quantile(N_SPECIATION, 0.75),
+              MEDIAN_N_EXTINCTION=quantile(N_EXTINCTION, 0.5),
+              QUANTILE_25_N_EXTINCTION=quantile(N_EXTINCTION, 0.25),
+              QUANTILE_75_N_EXTINCTION=quantile(N_EXTINCTION, 0.75)
   ),
   by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year)]
   
@@ -105,6 +118,29 @@ if (F){
   
   saveRDS(d_se, "../Figures/N_Species/figure_data.rda")
   saveRDS(d_se_seed, "../Figures/N_Species/d_se_seed.rda")
+  
+  d_se_all<-d[N_SPECIES>0, .(N=.N, 
+              N_SPECIES=sum(N_SPECIES), 
+              N_SPECIATION=sum(N_SPECIATION),
+              N_EXTINCTION=sum(N_EXTINCTION),
+              N_SPECIATION_YEAR=sum(N_SPECIATION_YEAR),
+              N_EXTINCTION_YEAR=sum(N_EXTINCTION_YEAR),
+              R_EXTINCTION_SPECIES=mean(R_EXTINCTION_SPECIES, na.rm=T),
+              R_SPECIATION_SPECIES=mean(R_SPECIATION_SPECIES, na.rm=T),
+              SD_R_EXTINCTION_SPECIES=sd(R_EXTINCTION_SPECIES, na.rm=T),
+              SD_R_SPECIATION_SPECIES=sd(R_SPECIATION_SPECIES, na.rm=T),
+              MEDIAN_N_SPECIES=quantile(N_SPECIES, 0.5),
+              QUANTILE_25_N_SPECIES=quantile(N_SPECIES, 0.25),
+              QUANTILE_75_N_SPECIES=quantile(N_SPECIES, 0.75),
+              MEDIAN_N_SPECIATION=quantile(N_SPECIATION, 0.5),
+              QUANTILE_25_N_SPECIATION=quantile(N_SPECIATION, 0.25),
+              QUANTILE_75_N_SPECIATION=quantile(N_SPECIATION, 0.75),
+              MEDIAN_N_EXTINCTION=quantile(N_EXTINCTION, 0.5),
+              QUANTILE_25_N_EXTINCTION=quantile(N_EXTINCTION, 0.25),
+              QUANTILE_75_N_EXTINCTION=quantile(N_EXTINCTION, 0.75)
+  ),
+  by=list(species_evo_level, species_evo_type, directional_speed, year)]
+  saveRDS(d_se_all, "../Figures/N_Species/figure_data_all.rda")
 }
 
 
