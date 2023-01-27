@@ -3,60 +3,56 @@ library(ggthemes)
 library(data.table)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 if (F){
-  d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD_0.rda")
+  d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD_without_IQR_outliers.rda")
   d1$species_evo_level<-0
   
-  d2<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_POOR_0.rda")
+  d2<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_POOR_without_IQR_outliers.rda")
   d2$species_evo_level<-0
   
-  d3<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_GOOD_0.rda")
+  d3<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_GOOD_without_IQR_outliers.rda")
   d3$species_evo_level<-0
   
-  d4<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR_0.rda")
+  d4<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR_without_IQR_outliers.rda")
   d4$species_evo_level<-0
   
-  d5<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_GOOD_1.rda")
-  d5$species_evo_level<-1
+  d
   
-  d6<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR_1.rda")
-  d6$species_evo_level<-1
-  
-  d<-rbindlist(list(d1, d2, d3, d4, d5, d6))
-  saveRDS(d, "../Data/N_speciation_extinction.rda")
+  d<-rbindlist(list(d1, d2, d3, d4))
+  saveRDS(d, "../Data/N_speciation_extinction/N_speciation_extinction_without_IQR_outliers.rda")
   
   
-  d1<-readRDS("../Data/distribution_traits/distribution_traits_BROAD_GOOD_0.rda")
+  d1<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_GOOD_without_IQR_outliers.rda")
   d1$species_evo_level<-0
   
-  d2<-readRDS("../Data/distribution_traits/distribution_traits_BROAD_POOR_0.rda")
+  d2<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_POOR_without_IQR_outliers.rda")
   d2$species_evo_level<-0
   colnames(d2)[17]<-"global_id"
-  d3<-readRDS("../Data/distribution_traits/distribution_traits_NARROW_GOOD_0.rda")
+  d3<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_GOOD_without_IQR_outliers.rda")
   d3$species_evo_level<-0
   
-  d4<-readRDS("../Data/distribution_traits/distribution_traits_NARROW_POOR_0.rda")
+  d4<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_POOR_without_IQR_outliers.rda")
   d4$species_evo_level<-0
   
-  d5<-readRDS("../Data/distribution_traits/distribution_traits_NARROW_GOOD_1.rda")
-  d5$species_evo_level<-1
   
-  d6<-readRDS("../Data/distribution_traits/distribution_traits_NARROW_POOR_1.rda")
-  d6$species_evo_level<-1
   
-  d<-rbindlist(list(d1, d2, d3, d4, d5, d6))
+  d<-rbindlist(list(d1, d2, d3, d4))
   
-  saveRDS(d, "../Data/distribution_traits.rda")
+  saveRDS(d, "../Data/distribution_traits/distribution_traits_without_IQR_outliers.rda")
   
 }
 if (F){
-  d<-readRDS("../Data/N_speciation_extinction.rda")
+  d<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
   
   #cols<-c("nb", "da", "global_id", "species_evo_type", "directional_speed", "species_evo_level")
   #d[, min_year:=min(year), by=cols]
   
   #d_unique<-unique(d[, ..cols])
+  d$outlier<-"F"
+  outliers<-readRDS("../Data/outliers/outliers_IQR.rda")
+  d[global_id %in% outliers]$outlier<-"T"
   d_end<-d[year==0]
   range(d_end$N_SPECIES)
+  sum(d_end$N_SPECIES)
   d_se<-d[, .(N=.N, N_SPECIES=sum(N_SPECIES), SD_N_SPECIES=sd(N_SPECIES),
               MEDIAN_N_SPECIES=quantile(N_SPECIES, 0.5),
               QUANTILE_25_N_SPECIES=quantile(N_SPECIES, 0.25),
@@ -64,20 +60,24 @@ if (F){
               ),
           by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year)]
   
-  d_quantile<-d[year==0, .(N_99=quantile(N_SPECIES, 0.99)),
-                by=list(nb, da, species_evo_level, species_evo_type, directional_speed)]
-  d_with_quantile<-merge(d_quantile, d_end, by=c("nb", "da", "species_evo_level", "species_evo_type", "directional_speed"))
-  outliers<-d_with_quantile[N_SPECIATION>N_99]
+  #d_quantile<-d[year==0, .(N_99=quantile(N_SPECIES, 0.99)),
+  #              by=list(nb, da, species_evo_level, species_evo_type, directional_speed)]
+  #d_with_quantile<-merge(d_quantile, d_end, 
+  #                       by=c("nb", "da", "species_evo_level", "species_evo_type", "directional_speed"))
+  #outliers<-d_with_quantile[N_SPECIATION>N_99]
   
-  d_se_without_ourliers<-d[!(global_id %in% outliers$global_id), .(N=.N, N_SPECIES=sum(N_SPECIES), SD_N_SPECIES=sd(N_SPECIES)),
-                           by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year)]
-  
+  d_se_without_ourliers<-d[outlier=="F", .(N=.N, N_SPECIES=sum(N_SPECIES), SD_N_SPECIES=sd(N_SPECIES)),
+                           by=list(nb, da, species_evo_level, species_evo_type, 
+                                   directional_speed, year, outlier)]
+  sum(d[year==0 & outlier=="F"]$N_SPECIES)
   d_se_without_ourliers$label<-paste(d_se_without_ourliers$nb, d_se_without_ourliers$da)
   d_se_without_ourliers$label2<-paste(d_se_without_ourliers$species_evo_type, d_se_without_ourliers$directional_speed)
   
-  p<-ggplot(d_se_without_ourliers[species_evo_level==0])+geom_bar(aes(x=label2, y=N_SPECIES, fill=label), 
-                                                                  stat = "identity", position = position_dodge(0.9))+
+  p<-ggplot(d_se_without_ourliers[species_evo_level==0 & year==0])+
+    geom_bar(aes(x=label2, y=N_SPECIES, fill=label), 
+             stat = "identity", position = position_dodge(0.9))+
     scale_fill_colorblind()
+  p
   ggsave(p, filename="../Figures/N_Species/N_Species_end_no_outliers.png", width=12, height=10)
   d$R_SPECIATION_SPECIES<-d$N_SPECIATION_YEAR/d$N_SPECIES
   d[is.nan(R_SPECIATION_SPECIES)]$R_SPECIATION_SPECIES<-0
@@ -104,10 +104,10 @@ if (F){
               QUANTILE_25_N_EXTINCTION=quantile(N_EXTINCTION, 0.25),
               QUANTILE_75_N_EXTINCTION=quantile(N_EXTINCTION, 0.75)
   ),
-  by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year)]
+  by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year, outlier)]
   
   d_se_seed<-d[N_SPECIES>0, .(N_SEED=length(unique(global_id))),
-    by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year)]
+    by=list(nb, da, species_evo_level, species_evo_type, directional_speed, year, outlier)]
   
   range(d$N_SPECIES)
   d_se$label<-paste(d_se$nb, d_se$da)

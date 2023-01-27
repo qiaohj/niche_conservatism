@@ -4,10 +4,11 @@ library(ggthemes)
 library(RSQLite)
 library(DBI)
 library(sf)
+library(ggpubr)
 setDTthreads(20)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 if (F){
-  d<-readRDS("/media/huijieqiao/QNAS/Niche_Conservatism/Data/distribution_traits.rda")
+  d<-readRDS("../Data/distribution_traits/distribution_traits.rda")
   d
   
   d_se2<-d[, .(N_CELLS=mean(N_CELLS),
@@ -18,7 +19,7 @@ if (F){
               QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
               QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
           by=list(year, species_evo_type, directional_speed, species_evo_level)]
-  saveRDS(d_se2, "../Data/distribution_traits_se_without_nb_da.rda")
+  saveRDS(d_se2, "../Data/distribution_traits/distribution_traits_se_without_nb_da.rda")
   
   d_se3<-d[, .(N_CELLS=mean(N_CELLS),
                SD_N_CELLS=sd(N_CELLS),
@@ -28,7 +29,7 @@ if (F){
                QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
                QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
            by=list(year, species_evo_type, directional_speed, species_evo_level, nb)]
-  saveRDS(d_se3, "../Data/distribution_traits_se_without_da.rda")
+  saveRDS(d_se3, "../Data/distribution_traits/distribution_traits_se_without_da.rda")
   
   
   d_se<-d[, .(N_CELLS=mean(N_CELLS),
@@ -39,7 +40,7 @@ if (F){
               QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
               QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
           by=list(year, species_evo_type, directional_speed, nb, da, species_evo_level)]
-  saveRDS(d_se, "../Data/distribution_traits_se.rda")
+  saveRDS(d_se, "../Data/distribution_traits/distribution_traits_se.rda")
   
   lat_bands<-seq(-87.5, 87.5, by=5)
   lat_band_label<-seq(-85, 85, by=5)
@@ -68,43 +69,48 @@ if (F){
     d_sub[[length(d_sub)+1]]<-n_sp
   }
   d_sub<-rbindlist(d_sub)
-  saveRDS(d_sub, "../Data/lat_gradient.rda")
-  d_sub<-readRDS("../Data/lat_gradient.rda")
+  saveRDS(d_sub, "../Data/lat_gradient/lat_gradient.rda")
+  d_sub<-readRDS("../Data/lat_gradient/lat_gradient.rda")
   n_species<-d[, .(N_Species=length(unique(sp_id))),
                by=list(year, species_evo_type, directional_speed,
                        nb, da, species_evo_level, global_id)]
   
   last<-n_species[year==0 & species_evo_level==0]
-  iqr<-IQR(last$N_Species)
-  sd<-sd(last$N_Species)
-  mean<-mean(last$N_Species)
+  #iqr<-IQR(last$N_Species)
+  #sd<-sd(last$N_Species)
+  #mean<-mean(last$N_Species)
   #mean+3*sd = 911.8022 
   last$is_outlier<-F
-  last[N_Species>(mean+3*sd)]$is_outlier<-T
+  outlier_type<-"IQR"
+  outlier_ids<-readRDS(sprintf("../Data/outliers/outliers_%s.rda", outlier_type))
+  last[global_id %in% outlier_ids]$is_outlier<-T
+  
+  
   table(last$is_outlier)
   ggplot(last)+geom_histogram(aes(x=N_Species))+
     scale_x_log10()
   
-  last2<-n_species[year==0 & species_evo_level==1]
-  iqr<-IQR(last2$N_Species)
-  sd<-sd(last2$N_Species)
-  mean<-mean(last2$N_Species)
+  #last2<-n_species[year==0 & species_evo_level==1]
+  #iqr<-IQR(last2$N_Species)
+  #sd<-sd(last2$N_Species)
+  #mean<-mean(last2$N_Species)
   #mean+3*sd = 322.7872 
-  last2$is_outlier<-F
-  last2[N_Species>(mean+3*sd)]$is_outlier<-T
-  table(last2$is_outlier)
-  ggplot(last2)+geom_histogram(aes(x=N_Species))+
-    scale_x_log10()
+  #last2$is_outlier<-F
+  #last2[N_Species>(mean+3*sd)]$is_outlier<-T
+  #table(last2$is_outlier)
+  #ggplot(last2)+geom_histogram(aes(x=N_Species))+
+  #  scale_x_log10()
   
-  outliers<-rbindlist(list(last, last2))
+  #outliers<-rbindlist(list(last, last2))
+  outliers<-last
   outliers$year<-NULL
   outliers$N_Species<-NULL
   
-  saveRDS(outliers, "../Data/outliers_details.rda")
+  saveRDS(outliers, "../Data/outliers/outliers_details_IQR.rda")
   outliers_se<-outliers[, .(N=.N), by=list(species_evo_type, directional_speed,
                                            nb, da, species_evo_level,
                                            is_outlier)]
-  saveRDS(outliers_se, "../Data/N_outliers.rda")
+  saveRDS(outliers_se, "../Data/outliers/N_outliers_IQR.rda")
   
   d_sub_with_outliers<-merge(d_sub, outliers, 
                              by=c("species_evo_type", "directional_speed",
@@ -112,8 +118,8 @@ if (F){
                                   "global_id"), all=T)
   
   d_sub_with_outliers[is.na(is_outlier)]$is_outlier<-F
-  saveRDS(d_sub_with_outliers, "../Data/lat_gradient_raw.rda")
-  d_sub_with_outliers<-readRDS("../Data/lat_gradient_raw.rda")
+  saveRDS(d_sub_with_outliers, "../Data/lat_gradient/lat_gradient_raw_IQR.rda")
+  d_sub_with_outliers<-readRDS("../Data/lat_gradient/lat_gradient_raw_IQR.rda")
   
   ooo<-d_sub_with_outliers[year==0 & is_outlier==T & species_evo_level==0, 
                            .(N=length(unique(global_id))),
@@ -130,7 +136,7 @@ if (F){
                                     nb, da, species_evo_level,
                                     is_outlier, from, to, mid)]
   
-  saveRDS(d_se, "../Data/lat_gradient_nb_da.rda")
+  saveRDS(d_se, "../Data/lat_gradient/lat_gradient_nb_da_IQR.rda")
   d_se_last_year_df<-d_sub_with_outliers[year==0]
   d_se_last_year_df[, .(N_Species=sum(N_Species), 
                         MEAN_N_Species=mean(N_Species),
@@ -152,13 +158,13 @@ if (F){
                                     nb, da, species_evo_level,
                                     is_outlier, from, to, mid)]
   
-  saveRDS(d_se_last_year, "../Data/lat_gradient_nb_da_last_year.rda")
+  saveRDS(d_se_last_year, "../Data/lat_gradient/lat_gradient_nb_da_last_year_IQR.rda")
   
   d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), N_CELLS=sum(N_CELLS)),
                             by=list(year, species_evo_type, directional_speed,
                                     species_evo_level,
                                     is_outlier, from, to, mid)]
-  saveRDS(d_se, "../Data/lat_gradient_outlier.rda")
+  saveRDS(d_se, "../Data/lat_gradient/lat_gradient_outlier_IQR.rda")
   
   d_se<-d_sub_with_outliers[, .(N_Species=sum(N_Species), 
                                 MEAN_N_Species=mean(N_Species),
@@ -170,7 +176,7 @@ if (F){
                             by=list(year, species_evo_type, directional_speed,
                                     species_evo_level,
                                     from, to, mid)]
-  saveRDS(d_se, "../Data/lat_gradient_all.rda")
+  saveRDS(d_se, "../Data/lat_gradient/lat_gradient_all_IQR.rda")
   
   d_se_last_year_df<-d_sub_with_outliers[year==0]
   d_se_last_year<-d_se_last_year_df[, .(N=.N,
@@ -185,7 +191,7 @@ if (F){
                                             species_evo_level,
                                             from, to, mid)]
   
-  saveRDS(d_se_last_year, "../Data/lat_gradient_all_last_year.rda")
+  saveRDS(d_se_last_year, "../Data/lat_gradient/lat_gradient_all_last_year_IQR.rda")
   
   
   setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
@@ -220,17 +226,17 @@ if (F){
     item<-continent_df[between(lat, lat_band_df[i]$from, lat_band_df[i]$to)]
     lat_band_df[i]$n_land<-nrow(item)
   }
-  saveRDS(lat_band_df, "../Data/lat_band_n_land.rda")
+  saveRDS(lat_band_df, "../Data/lat_gradient/lat_band_n_land.rda")
 }
 source("commons/functions.r")
-d_se<-readRDS("../Data/distribution_traits_se.rda")
-d_se2<-readRDS("../Data/distribution_traits_se_without_nb_da.rda")
+d_se<-readRDS("../Data/distribution_traits/distribution_traits_se_without_IQR_outliers.rda")
+d_se2<-readRDS("../Data/distribution_traits/distribution_traits_se_without_nb_da_without_IQR_outliers.rda")
 d_se_large<-d_se[year==0 & nb=="BROAD" & species_evo_level==0]
 d_se_narrow<-d_se[year==0  & nb=="NARROW" & species_evo_level==0]
 d_se_nb<-merge(d_se_large, d_se_narrow, by=c("species_evo_type", "directional_speed", "da"))
 d_se_nb$change<-(d_se_nb$MEDIAN_N_CELL.x - d_se_nb$MEDIAN_N_CELL.y)/d_se_nb$MEDIAN_N_CELL.y
 range(d_se_nb[change>0]$change)
-write.csv(d_se_nb, "../Data/area_nb.csv", row.names = F)
+write.csv(d_se_nb, "../Data/distribution_traits/area_nb_without_IQR_outliers.csv", row.names = F)
 
 d_se_good<-d_se[year==0 & da=="GOOD" & species_evo_level==0]
 d_se_poor<-d_se[year==0  & da=="POOR" & species_evo_level==0]
@@ -238,7 +244,7 @@ d_se_da<-merge(d_se_good, d_se_poor, by=c("species_evo_type", "directional_speed
 nrow(d_se_da[MEDIAN_N_CELL.x>MEDIAN_N_CELL.y])
 nrow(d_se_da[MEDIAN_N_CELL.x==MEDIAN_N_CELL.y])
 d_se_da[MEDIAN_N_CELL.x<MEDIAN_N_CELL.y]
-write.csv(d_se_da, "../Data/area_da.csv", row.names = F)
+write.csv(d_se_da, "../Data/distribution_traits/area_da_without_IQR_outliers.csv", row.names = F)
 #numbers
 d_se[year==0 & species_evo_level==0&species_evo_type==1]
 d_se2[year==0 & species_evo_level==0&species_evo_type==1]
@@ -281,7 +287,7 @@ p
 ggsave(p, filename="../Figures/Distribution_Traits/n_cell_end.png", width=12, height=6)
 
 
-lat_se<-readRDS("../Data/lat_gradient_nb_da.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_nb_da_IQR.rda")
 lat_se$evo_type<-format_evoType(lat_se$species_evo_type)
 lat_se$label<-format_evoType_amplitude(lat_se$evo_type, lat_se$directional_speed, order=1)
 y<-1198
@@ -298,9 +304,9 @@ p<-ggplot(lat_se[species_evo_level==0 & year==0])+
 #scale_fill_colorblind()
 #scale_y_log10()
 p
-ggsave(p, filename="../Figures/Distribution_Traits/lat_gradient_details.png", width=12, height=6)
+ggsave(p, filename="../Figures/Distribution_Traits/lat_gradient_details_IQR.png", width=12, height=6)
 
-lat_se<-readRDS("../Data/lat_gradient_outlier.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_outlier_IQR.rda")
 
 lat_se$evo_type<-format_evoType(lat_se$species_evo_type)
 lat_se$label<-format_evoType_amplitude(lat_se$evo_type, lat_se$directional_speed, order=1)
@@ -318,10 +324,10 @@ p<-ggplot(lat_se[species_evo_level==0 & year==0])+
 #scale_fill_colorblind()
 #scale_y_log10()
 p
-ggsave(p, filename="../Figures/Distribution_Traits/lat_gradient_outlier.png", width=8, height=4)
+ggsave(p, filename="../Figures/Distribution_Traits/lat_gradient_outlier_IQR.png", width=8, height=4)
 
-lat_se<-readRDS("../Data/lat_gradient_all.rda")
-lat_band_df<-readRDS("../Data/lat_band_n_land.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_all_IQR.rda")
+lat_band_df<-readRDS("../Data/lat_gradient/lat_band_n_land.rda")
 lat_se_n_land<-merge(lat_se, lat_band_df, by=c("from", "to", "mid"))
 lat_se_n_land$MEAN_Species<-lat_se_n_land$N_Species/lat_se_n_land$n_land
 
@@ -383,11 +389,11 @@ p
 ggsave(p, filename="../Figures/Distribution_Traits/lat_gradient_full.png",
        width=12, height=4)
 
-lat_se<-readRDS("../Data/lat_gradient_outlier.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_outlier_IQR.rda")
 lat_se$evo_type<-format_evoType(lat_se$species_evo_type)
 lat_se$label<-format_evoType_amplitude(lat_se$evo_type, lat_se$directional_speed, order=1)
 
-lat_band_df<-readRDS("../Data/lat_band_n_land.rda")
+lat_band_df<-readRDS("../Data/lat_gradient/lat_band_n_land.rda")
 lat_se_n_land<-merge(lat_se, lat_band_df, by=c("from", "to", "mid"))
 lat_se_n_land$MEAN_Species<-lat_se_n_land$N_Species/lat_se_n_land$n_land
 xmin_outlier<-min(lat_se_n_land[species_evo_level==0 & between(mid, -20, 65) & is_outlier==T]$MEAN_Species)
@@ -400,7 +406,7 @@ ggplot(lat_se_n_land[species_evo_level==0 & year==0])+
   geom_point(aes(x=N_Species, y=mid, color=label))+
   facet_wrap(~is_outlier, scale="free")
 
-yyy=1198
+yyy=0
 for (yyy in c(0:1198)){
   print(yyy)
 
@@ -411,7 +417,7 @@ for (yyy in c(0:1198)){
     
     #geom_point(aes(x=N_Species, y=mid, color=label))+
     geom_path(aes(x=MEAN_Species, y=mid, color=label), position="identity")+
-    ggtitle(sprintf("%.1f kyb (high speciation only)", yyy/10))+
+    ggtitle(sprintf("%.1f kyb (outliers only)", yyy/10))+
     theme_bw()+
     labs(x="Number of species per cell", y="Latitudinal band", color="Evolution type",
          fill="Evolution type")+
@@ -426,12 +432,13 @@ for (yyy in c(0:1198)){
     
     #geom_point(aes(x=N_Species, y=mid, color=label))+
     geom_path(aes(x=MEAN_Species, y=mid, color=label), position="identity")+
-    ggtitle(sprintf("%.1f kyb (low speciation only)", yyy/10))+
+    ggtitle(sprintf("%.1f kyb (without outliers)", yyy/10))+
     theme_bw()+
     labs(x="Number of species per cell", y="Latitudinal band", color="Evolution type",
          fill="Evolution type")+
     xlim(0, ceiling(xmax_nooutlier))
-  
+  p<-ggarrange(p_nooutlier, p_outlier)
+  p
   ggsave(p, 
          filename=sprintf("../Figures/Distribution_Traits/by_year_outlier/lat_gradient_outlier/per_cell_-%d.png", yyy), 
          width=8, height=4)
@@ -445,12 +452,15 @@ for (yyy in c(0:1198)){
 
 
 
-lat_se<-readRDS("../Data/lat_gradient_all.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_all_IQR.rda")
+lat_se$evo_type<-format_evoType(lat_se$species_evo_type)
+lat_se$label<-format_evoType_amplitude(lat_se$evo_type, lat_se$directional_speed, order=1)
+
 lat_se_n_land<-merge(lat_se, lat_band_df, by=c("from", "to", "mid"))
 lat_se_n_land$MEAN_Species<-lat_se_n_land$N_Species/lat_se_n_land$n_land
 xmin<-min(lat_se_n_land[species_evo_level==0 & between(mid, -50, 65)]$MEAN_Species)
 xmax<-max(lat_se_n_land[species_evo_level==0 & between(mid, -50, 65)]$MEAN_Species)
-yyy=1198
+yyy=0
 for (yyy in c(0:1198)){
   print(yyy)
   p<-ggplot(lat_se_n_land[species_evo_level==0 & year==yyy & between(mid, -50, 65)])+

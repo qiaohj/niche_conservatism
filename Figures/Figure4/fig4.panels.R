@@ -77,6 +77,7 @@ d_se$label2<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, ord
 p2<-ggplot(d_se[year==0&species_evo_level==0])+
   geom_bar(aes(y=label2, x=MEDIAN_N_SPECIES, fill=label), 
            stat = "identity", position = position_dodge(0.9))+
+  geom_errorbarh()
   labs(x="Number of species", fill="")+
   scale_fill_manual(values=colorBlindGrey8[c(2, 3, 4, 8)])+
   theme_bw()+

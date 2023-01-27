@@ -37,28 +37,31 @@ dbDisconnect(mydb)
 i=1
 
 nb<-"BROAD"
-da<-"GOOD"
+da<-"POOR"
 species_evo_level<-0
 
 if (species_evo_level==0){
   simulations<-simulations[which((simulations$nb==nb)&
-                                 (simulations$is_run==1)&
-                                 (simulations$species_evo_level==species_evo_level)&
-                                 (simulations$da==da)),]
-}else{
-  simulations1<-simulations[which((simulations$nb==nb)&
                                    (simulations$is_run==1)&
                                    (simulations$species_evo_level==species_evo_level)&
                                    (simulations$da==da)),]
+}else{
+  simulations1<-simulations[which((simulations$nb==nb)&
+                                    (simulations$is_run==1)&
+                                    (simulations$species_evo_level==species_evo_level)&
+                                    (simulations$da==da)),]
   
   simulations2<-simulations[which((simulations$nb==nb)&
-                                   (simulations$is_run==1)&
-                                   (simulations$species_evo_level==0)&
-                                   (simulations$da==da)&
+                                    (simulations$is_run==1)&
+                                    (simulations$species_evo_level==0)&
+                                    (simulations$da==da)&
                                     (simulations$species_evo_type==1)),]
   
   simulations<-rbind(simulations1, simulations2)
 }
+outlier_type<-"IQR"
+outlier_ids<-readRDS(sprintf("../Data/outliers/outliers_%s.rda", outlier_type))
+simulations<-simulations[which(!(simulations$global_id %in% outlier_ids)),]
 
 all_df<-simulations
 
@@ -71,25 +74,28 @@ df_all<-list()
 i=3
 for (i in c(1:nrow(all_df))){
   
-  print(paste(i, nrow(all_df)))
+  print(paste(i, nrow(all_df), nb, da, species_evo_level))
   item<-all_df[i,]
   
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
               item$directional_speed, item$species_evo_level)
   #print(paste(i, nrow(all_df), sp))
+  
   if (species_evo_level==0){
     if ((nb=="BROAD")&(da=="GOOD")){
-      ttt<-sprintf("../Results/%s/%s.N.rda", sp, sp)
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)
     }else{
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)  
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)  
     }
   }else{
     if (item$species_evo_type==1){
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)  
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)  
     }else{
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.N.rda", sp, sp) 
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.csv", sp, sp) 
     }
   }
+  
+  
   if (!file.exists(ttt)){
     #print("skip")
     #next()
@@ -98,7 +104,14 @@ for (i in c(1:nrow(all_df))){
   }
   #print(sprintf("rm %s", ttt))
   item_df<-readRDS(ttt)
+  if (nrow(item_df)==0){
+    next()
+  }
+  
   #cols<-c("year", "N_SPECIES", "N_SPECIATION", "N_EXTINCTION")
+  item_df<-item_df[, -c("FROM_YEAR")]
+  from_year<-item_df[, .(FROM_YEAR=max(year)), by="sp_id"]
+  item_df<-merge(item_df, from_year, by="sp_id")
   item_df$species_evo_type<-item$species_evo_type
   item_df$directional_speed<-item$directional_speed
   item_df$nb<-item$nb
@@ -109,14 +122,9 @@ for (i in c(1:nrow(all_df))){
 }
 
 df_all<-rbindlist(df_all)
-df_all_null<-df_all[(species_evo_type)==1&(directional_speed==0)]
-df_all_null<-df_all_null[,c("nb", "da", "global_id", "year", 
-                            "N_SPECIES", "N_SPECIATION", "N_EXTINCTION")]
-colnames(df_all_null)<-c("nb", "da", "global_id", "year", 
-                         "N_SPECIES_null", "N_SPECIATION_null", "N_EXTINCTION_null")
-df_all_with_null<-merge(df_all, df_all_null, 
-                        by=c("nb", "da", "global_id", "year"),
-                        all=F)
-saveRDS(df_all_with_null, sprintf("../Data/N_speciation_extinction_items/N_speciation_extinction_%s_%s_%d_without_IQR_outliers.rda", 
-                                  nb, da))
 
+saveRDS(df_all, sprintf("../Data/distribution_traits_items/distribution_traits_%s_%s_without_%s_outliers.rda", nb, da, outlier_type))
+
+if (F){
+  ddd<-readRDS("../Data/distribution_traits/distribution_traits_se.rda")
+}

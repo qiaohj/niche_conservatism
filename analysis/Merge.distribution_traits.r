@@ -135,3 +135,7 @@ for (i in c(1:nrow(all_df))){
 df_all<-rbindlist(df_all)
 
 saveRDS(df_all, sprintf("../Data/distribution_traits_%s_%s_%d.rda", nb, da, species_evo_level))
+
+if (F){
+  ddd<-readRDS("../Data/distribution_traits/distribution_traits_se.rda")
+}

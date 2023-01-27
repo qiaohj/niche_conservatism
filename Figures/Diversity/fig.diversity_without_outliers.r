@@ -22,10 +22,14 @@ setDTthreads(20)
 #source("commons/diverging_map.r")
 polygon<-readRDS("../Figures/Example/polygon.rda")
 #diversity<-readRDS("../Data/diversity.rda")
-nb<-"BROAD"
-da<-"GOOD"
+#nb<-"BROAD"
+#da<-"GOOD"
 #diversity<-readRDS(sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Data/diversity_items/%s_%s.rda", nb, da))
-diversity<-readRDS("../Data/diversity.rda")
+outlier_type<-"IQR"
+diversity<-readRDS(sprintf("../Data/diversity/diversity_without_%s_outliers.rda", outlier_type))
+if (F){
+  seeds<-readRDS("../Data/mask_lonlat.rda")
+}
 world <- ne_countries(scale = "small", returnclass = "sf")
 
 
@@ -34,19 +38,20 @@ crs_america<-"+proj=laea +lat_0=30 +lon_0=-90 +x_0=0 +y_0=0 +ellps=GRS80 +units=
 
 year<-0
 diversity[N_SPECIES==max(diversity$N_SPECIES)]
-outlier_ids<-readRDS("../Data/outliers.rda")
-diversity<-diversity[!(global_id %in% outlier_ids)]
+#outlier_ids<-readRDS("../Data/outliers.rda")
+#diversity<-diversity[!(global_id %in% outlier_ids)]
 #diversity_polygon<-merge(polygon, diversity, by.x="Name", by.y="global_id")
 cols<-c("evo_type", "species_evo_type",
         "directional_speed", "species_evo_level")
 combinations<-unique(diversity[, ..cols])
-i<-1
+i<-13
+
 y=0
 args = commandArgs(trailingOnly=TRUE)
 
 ii<-as.numeric(args[1])
 if (is.na(ii)){
-  ii=1
+  ii=2
 }
 #for (i in c(1:nrow(combinations))){
 for (i in c(ii:ii)){
@@ -78,7 +83,11 @@ for (i in c(ii:ii)){
     
     item_y[N_SPECIES>threshold]$N_SPECIES<-threshold
     item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
-    
+    if (F){
+      st_write(item_y, sprintf("../Data/diversity/Shape/diversity_species_evo_type_%d_directional_speed_%.2f_year_%d.kml", 
+                               ccc$species_evo_type, ccc$directional_speed, y),
+               DIM=2)
+    }
     p_asia<-ggplot(item_y, aes(colour=N_SPECIES)) +
       geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
       geom_sf()+
@@ -128,7 +137,7 @@ for (i in c(ii:ii)){
     #ggsave(p, filename=sprintf("../Figures/Diversity/by_year_%s_%s/%d_%.2f.y-%d.png", 
     #                           nb, da, ccc$species_evo_type, ccc$directional_speed, y), 
     #       width=12, height=6, bg = "white")
-    ggsave(p, filename=sprintf("../Figures/Diversity/by_year/%d_%.2f.y-%d.png", 
+    ggsave(p, filename=sprintf("../Figures/Diversity/by_year_without_%s_outliers/%d_%.2f.y-%d.png", outlier_type,
                                ccc$species_evo_type, ccc$directional_speed, y), 
             width=12, height=6, bg = "white")
   }

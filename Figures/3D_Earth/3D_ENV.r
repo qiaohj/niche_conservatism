@@ -73,7 +73,7 @@ min_tmin<-round(min(c(v_tmax$v, v_tmin$v)))
 max_tmin<-round(max(c(v_tmax$v, v_tmin$v)))
 min_prcp<-0
 max_prcp<-50
-
+y
 for (y in c(1200:0)){
   print(y)
   polygon_tmax<-merge(polygon, v_tmax[year==y], by.x="Name", by.y="global_id")
@@ -233,47 +233,39 @@ seeds_index<-unique(simulations$global_id)
 
 seeds<-polygon_tmax[which(polygon_tmax$Name %in% seeds_index),]
 cols<-Reds(100)[80]
+cols_blue<-Blues(100)[80]
+
+outlier_ids<-readRDS("../Data/outliers/outliers_IQR.rda")
+seeds$color<-"Normal"
+seeds[which(seeds$Name %in% outlier_ids), "color"]<-"Outliers"
 p_seeds1<-ggplot(polygon_tmax) +
   #geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
   geom_sf(color="#e3e3e3", fill="white", size=0.1) +
-  geom_sf(data=seeds, color=cols, fill=cols, size=0.1) + 
+  geom_sf(data=seeds, aes(color=color, fill=color), size=0.1) + 
+  scale_color_manual(values=c(cols, cols_blue), breaks=c("Normal", "Outliers"))+
+  scale_fill_manual(values=c(cols, cols_blue), breaks=c("Normal", "Outliers"))+
   coord_sf(crs = st_crs(crs_asia))+ xlim(-12e6, 12e6)+
   ylim(-12e6, 12e6)+
   theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
         panel.background = element_rect(fill = "#FFFFFF"),
-        axis.title = element_blank())
+        axis.title = element_blank(),
+        legend.position = "none")
 
 p_seeds2<-ggplot(polygon_tmax) +
   #geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
   geom_sf(color="#e3e3e3", fill="white", size=0.1) +
-  geom_sf(data=seeds, color=cols, fill=cols, size=0.1) + 
+  geom_sf(data=seeds, aes(color=color, fill=color), size=0.1) + 
+  scale_color_manual(values=c(cols, cols_blue), breaks=c("Normal", "Outliers"))+
+  scale_fill_manual(values=c(cols, cols_blue), breaks=c("Normal", "Outliers"))+
   coord_sf(crs = st_crs(crs_america))+ xlim(-12e6, 12e6)+
   ylim(-12e6, 12e6)+
   theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
         panel.background = element_rect(fill = "#FFFFFF"),
-        axis.title = element_blank())
+        axis.title = element_blank(),
+        legend.position = "none")
 p_seeds<-ggarrange(p_seeds1, p_seeds2, nrow=1)
 ggsave(p_seeds, filename="../Figures/Configure/seeds.png", width=12, height=6, bg="white")
 
-p_seeds1<-ggplot(polygon_tmax) +
-  #geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-  geom_sf(color="#e3e3e3", fill="white", size=0.3) +
-  geom_sf(data=seeds, color=cols, fill=cols, size=0.3) + 
-  coord_sf(crs = st_crs(crs_asia))+ xlim(-12e6, 12e6)+
-  ylim(-12e6, 12e6)+
-  theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
-        panel.background = element_rect(fill = "#FFFFFF"),
-        axis.title = element_blank())
-
-p_seeds2<-ggplot(polygon_tmax) +
-  #geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-  geom_sf(color="#e3e3e3", fill="white", size=0.3) +
-  geom_sf(data=seeds, color=cols, fill=cols, size=0.3) + 
-  coord_sf(crs = st_crs(crs_america))+ xlim(-12e6, 12e6)+
-  ylim(-12e6, 12e6)+
-  theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
-        panel.background = element_rect(fill = "#FFFFFF"),
-        axis.title = element_blank())
 
 p_seeds2_part<-ggplot(polygon_tmax) +
   #geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
@@ -286,7 +278,6 @@ p_seeds2_part<-ggplot(polygon_tmax) +
         panel.background = element_rect(fill = "#FFFFFF"),
         axis.title = element_blank())
 p_seeds2_part
-p_seeds<-ggarrange(p_seeds1, p_seeds2, nrow=1)
 ggsave(p_seeds, filename="../Figures/Configure/seeds.pdf", width=24, height=12, bg="white")
 ggsave(p_seeds2_part, filename="../Figures/Configure/seeds2_part.pdf", width=4, height=3, bg="white")
 

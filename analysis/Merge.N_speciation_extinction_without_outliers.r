@@ -36,29 +36,32 @@ dbDisconnect(mydb)
 
 i=1
 
-nb<-"BROAD"
+nb<-"NARROW"
 da<-"GOOD"
 species_evo_level<-0
 
 if (species_evo_level==0){
   simulations<-simulations[which((simulations$nb==nb)&
-                                 (simulations$is_run==1)&
-                                 (simulations$species_evo_level==species_evo_level)&
-                                 (simulations$da==da)),]
-}else{
-  simulations1<-simulations[which((simulations$nb==nb)&
                                    (simulations$is_run==1)&
                                    (simulations$species_evo_level==species_evo_level)&
                                    (simulations$da==da)),]
+}else{
+  simulations1<-simulations[which((simulations$nb==nb)&
+                                    (simulations$is_run==1)&
+                                    (simulations$species_evo_level==species_evo_level)&
+                                    (simulations$da==da)),]
   
   simulations2<-simulations[which((simulations$nb==nb)&
-                                   (simulations$is_run==1)&
-                                   (simulations$species_evo_level==0)&
-                                   (simulations$da==da)&
+                                    (simulations$is_run==1)&
+                                    (simulations$species_evo_level==0)&
+                                    (simulations$da==da)&
                                     (simulations$species_evo_type==1)),]
   
   simulations<-rbind(simulations1, simulations2)
 }
+outlier_type<-"IQR"
+outlier_ids<-readRDS(sprintf("../Data/outliers/outliers_%s.rda", outlier_type))
+simulations<-simulations[which(!(simulations$global_id %in% outlier_ids)),]
 
 all_df<-simulations
 
@@ -79,7 +82,7 @@ for (i in c(1:nrow(all_df))){
   #print(paste(i, nrow(all_df), sp))
   if (species_evo_level==0){
     if ((nb=="BROAD")&(da=="GOOD")){
-      ttt<-sprintf("../Results/%s/%s.N.rda", sp, sp)
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)
     }else{
       ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)  
     }
@@ -117,6 +120,6 @@ colnames(df_all_null)<-c("nb", "da", "global_id", "year",
 df_all_with_null<-merge(df_all, df_all_null, 
                         by=c("nb", "da", "global_id", "year"),
                         all=F)
-saveRDS(df_all_with_null, sprintf("../Data/N_speciation_extinction_items/N_speciation_extinction_%s_%s_%d_without_IQR_outliers.rda", 
-                                  nb, da))
+saveRDS(df_all_with_null, sprintf("../Data/N_speciation_extinction_items/N_speciation_extinction_%s_%s_without_%s_outliers.rda", 
+                                  nb, da, outlier_type))
 
