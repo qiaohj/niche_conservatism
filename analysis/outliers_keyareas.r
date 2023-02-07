@@ -6,6 +6,8 @@ library(rnaturalearth)
 library(rnaturalearthdata)
 library(ggspatial)
 library(ggpubr)
+library(RSQLite)
+library(DBI)
 
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
@@ -14,7 +16,7 @@ setDTthreads(10)
 print(sprintf("Number of core(s) is(are) %d.", getDTthreads()))
 
 
-base_db<-"../Configuration/conf.sqlite"
+base_db<-"../Configuration/conf_raw.sqlite"
 mydb <- dbConnect(RSQLite::SQLite(), base_db)
 #mydb <- dbConnect(RSQLite::SQLite(), "/media/huijieqiao/SSD_Fast/conf.sqlite")
 simulations<-dbReadTable(mydb, "simulations")
@@ -37,7 +39,7 @@ table(simulations$species_evo_type)
 
 table(simulations[, c("nb", "da")])
 
-kays<-c(20110, 20192, 19889, 19888, 19887, 19886)
+removed_ids<-c(93, 13335, 20110, 20193, 20192, 19889, 19888, 19887, 19886, 19967, 19968, 19969, 19970)
 template<-"%d_%s_%s_%d_%s_%d"
 #all_df<-simulations[which(simulations$global_id %in% sub_seeds),]
 all_df<-simulations
@@ -73,12 +75,12 @@ for (i in c(1:nrow(all_df))){
   if (is.null(df)){
     next()
   }
-  if (nrow(df[global_id %in% kays])==0){
+  if (nrow(df[global_id %in% removed_ids])==0){
     global_ids<-c(global_ids, item$global_id)
   }
   
 }
-saveRDS(global_ids, "../Data/outliers/outliers_keyareas.rda")
+saveRDS(unique(global_ids), "../Data/outliers/outliers_keyareas.rda")
 
 global_ids<-unique(readRDS("../Data/outliers/outliers_keyareas.rda"))
 seeds<-readRDS("../Data/seeds.rda")

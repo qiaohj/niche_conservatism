@@ -9,7 +9,7 @@ library(ggpubr)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 
-n_species<-readRDS("../Data/N_speciation_extinction.rda")
+n_species<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
 n_sp_last<-n_species[year==0 & species_evo_level==0]
 hist(n_sp_last$N_SPECIES)
 

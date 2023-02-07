@@ -12,7 +12,7 @@ dbDisconnect(mydb)
 i=1
 
 if (F){
-  simulations<-simulations[which(simulations$is_run==1),]
+  
   simulations<-simulations[
     which(simulations$global_id %in% c(27790, 25837, 24109,
                                        54786, 19759, 13651,
@@ -22,9 +22,11 @@ if (F){
 }
 cmd_rm<-c()
 cmd_mv<-c()
+simulations<-simulations[which(simulations$is_run==1),]
+
 #simulations<-simulations[which(simulations$nb=="NARROW"),]
-simulations<-simulations[which(simulations$nb=="BROAD"),]
-simulations<-simulations[which(simulations$da=="GOOD"),]
+simulations<-simulations[which(simulations$nb=="NARROW"),]
+simulations<-simulations[which(simulations$da=="POOR"),]
 #simulations<-simulations[which(!((simulations$da=="GOOD")&(simulations$nb=="BROAD"))),]
 
 simulations<-simulations[which(simulations$species_evo_level==0),]
@@ -40,28 +42,33 @@ for (i in c(1:nrow(simulations))){
   print(paste(i, nrow(simulations), folder))
   
   if (file.exists(folder)){
-    log<-sprintf("%s/%s.sqlite", folder, item$label)
-    passed<-T
-    if (file.exists(log)){
-      mydb <- dbConnect(RSQLite::SQLite(), log)
-      trees<-dbReadTable(mydb, "trees")
-      dbDisconnect(mydb)
-      if (nrow(trees)==2){
-        tree_str<-trees[1, "CONTENT"]
-        if (nchar(tree_str)<10){
-          asdfasdf
-        }
-        sp.log<-sprintf("%s/%s.sp.log", folder, item$label)
-        if (file.exists(sp.log)){
+    log<-sprintf("%s/%s.log", folder, item$label)
+    if (!file.exists(log)){
+      passed<-F
+    }else{
+      log<-sprintf("%s/%s.sqlite", folder, item$label)
+      passed<-T
+      if (file.exists(log)){
+        mydb <- dbConnect(RSQLite::SQLite(), log)
+        trees<-dbReadTable(mydb, "trees")
+        dbDisconnect(mydb)
+        if (nrow(trees)==2){
+          tree_str<-trees[1, "CONTENT"]
+          if (nchar(tree_str)<10){
+            asdfasdf
+          }
+          sp.log<-sprintf("%s/%s.sp.log", folder, item$label)
+          if (file.exists(sp.log)){
+          }else{
+            passed<-F
+          }
         }else{
           passed<-F
+          
         }
       }else{
         passed<-F
-        
       }
-    }else{
-      passed<-F
     }
     if (!passed){
       cmd_rm<-c(cmd_rm, sprintf("rm -rf %s", folder))
