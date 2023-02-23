@@ -25,12 +25,12 @@ cmd_mv<-c()
 simulations<-simulations[which(simulations$is_run==1),]
 
 #simulations<-simulations[which(simulations$nb=="NARROW"),]
-simulations<-simulations[which(simulations$nb=="NARROW"),]
-simulations<-simulations[which(simulations$da=="POOR"),]
+simulations<-simulations[which(simulations$nb=="BROAD"),]
+simulations<-simulations[which(simulations$da=="GOOD"),]
 #simulations<-simulations[which(!((simulations$da=="GOOD")&(simulations$nb=="BROAD"))),]
 
 simulations<-simulations[which(simulations$species_evo_level==0),]
-#simulations<-simulations[which(simulations$species_evo_type %in% c(2,3,4)),]
+simulations<-simulations[which(simulations$species_evo_type %in% c(1)),]
 
 for (i in c(1:nrow(simulations))){
   

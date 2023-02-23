@@ -34,7 +34,7 @@ template<-"%d_%s_%s_%d_%s_%d"
 all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 all_df<-data.table(all_df)
-
+all_df<-all_df[global_id==23323 &species_evo_type==1]
 for (i in c(1:nrow(all_df))){
   item<-all_df[i,]
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)

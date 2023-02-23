@@ -97,7 +97,8 @@ mydb <- dbConnect(RSQLite::SQLite(), base_db)
 dbWriteTable(mydb, "simulations", simulations, overwrite=T)
 dbDisconnect(mydb)
 
-removed_ids<-c(93, 13335, 20110, 20193, 20192, 19889, 19888, 19887, 19886, 19967, 19968, 19969, 19970)
+removed_ids<-c(93, 13335, 13664, 20110, 20193, 20192, 20108, 20109, 20110,
+               19889, 19888, 19887, 19886, 19967, 19968, 19969, 19970)
 continents<-st_read("../Shape/isea3h8/continent.shp")
 polygon_sub<-polygon[which((polygon$Name %in% continents$global_id)),]
 polygon_sub_removed<-polygon[which((polygon$Name %in% removed_ids)),]

@@ -19,8 +19,8 @@ dbDisconnect(mydb)
 i=233
 
 #simulations<-simulations[which(!((simulations$nb=="BROAD" & simulations$da=="GOOD"))),]
-simulations<-simulations[which(((simulations$nb=="BROAD" & simulations$da=="GOOD"))),]
-simulations<-simulations[which(simulations$species_evo_level==0),]
+#simulations<-simulations[which(((simulations$nb=="NARROW"))),]
+#simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
 #simulations<-simulations[which(simulations$species_evo_type %in% c(4)),]
 
@@ -34,7 +34,8 @@ template<-"%d_%s_%s_%d_%s_%d"
 all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 all_df<-data.table(all_df)
-
+#19980
+#all_df<-all_df[species_evo_type==1]
 for (i in c(1:nrow(all_df))){
   item<-all_df[i,]
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)
@@ -52,12 +53,7 @@ for (i in c(1:nrow(all_df))){
   if (item$species_evo_level==1){
     base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results_1"
   }else{
-    if ((item$nb=="BROAD")&(item$da=="GOOD")){
-
-      base<-"../Results"
-    }else{
-      base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
-    }
+    base<-"../Results"
   }
   ttt<-sprintf("%s/%s/%s.diversity.rda", base, sp, sp)
   
@@ -81,13 +77,15 @@ for (i in c(1:nrow(all_df))){
   
   print(paste(Sys.time(), file.size(log)/1024/1024))
   if ((file.size(log)/1024/1024)>100){
-    print("too big, skip")
-    next()
+    #print("too big, skip")
+    #next()
   }
   
   saveRDS(NULL, ttt)
   df<-fread(log)
-  
+  if (nrow(df)==0){
+    next()
+  }
   
   colnames(df)<-c("year", "global_id", "group_id", "n", "sp_id", "suitable")
   df<-df[suitable==1]
