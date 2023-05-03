@@ -79,15 +79,15 @@ for (i in c(1:nrow(all_df))){
   #print(paste(i, nrow(all_df), sp))
   if (species_evo_level==0){
     if ((nb=="BROAD")&(da=="GOOD")){
-      ttt<-sprintf("../Results/%s/%s.N.rda", sp, sp)
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.speciation.extinction.rda", sp, sp) 
     }else{
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)  
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.speciation.extinction.rda", sp, sp)  
     }
   }else{
     if (item$species_evo_type==1){
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)  
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.speciation.extinction.rda", sp, sp)  
     }else{
-      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.N.rda", sp, sp) 
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.N.speciation.extinction.rda", sp, sp) 
     }
   }
   if (!file.exists(ttt)){
@@ -117,6 +117,6 @@ colnames(df_all_null)<-c("nb", "da", "global_id", "year",
 df_all_with_null<-merge(df_all, df_all_null, 
                         by=c("nb", "da", "global_id", "year"),
                         all=F)
-saveRDS(df_all_with_null, sprintf("../Data/N_speciation_extinction_items/N_speciation_extinction_%s_%s_%d_without_IQR_outliers.rda", 
+saveRDS(df_all_with_null, sprintf("../Data/N_speciation_extinction_items/N_speciation_extinction_%s_%s.rda", 
                                   nb, da))
 

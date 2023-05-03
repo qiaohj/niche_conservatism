@@ -57,7 +57,7 @@ for (i in c(1:nrow(all_df))){
       base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
     }
   }
-  ttt<-sprintf("%s/%s/%s.niche_traits.rda", base, sp, sp)
+  ttt<-sprintf("%s/%s/%s.realized_niche_traits.rda", base, sp, sp)
   
   if (!file.exists(ttt)){
     print("not exist, skip")
@@ -84,28 +84,34 @@ for (i in c(1:nrow(all_df))){
 }
 df_all1<-rbindlist(df_all)
 
-saveRDS(df_all1, "../Data/niche_traits/niche_traits_fn.rda")
+saveRDS(df_all1, "../Data/niche_traits/niche_traits_rn.rda")
 
-df_all1<-readRDS("../Data/niche_traits/niche_traits_fn.rda")
-
-niche_traits_se<-df_all1[, .(V_range=mean(V_range), sd_V_range=sd(V_range),
-                         V_max=mean(V_max), sd_V_max=sd(V_max),
-                         V_min=mean(V_min), sd_V_min=sd(V_min),
-                         V_mean=mean(V_mean), sd_V_mean=sd(V_mean)),
-                        by=list(year, evo_type, nb, da, V_L,
-                                species_evo_type, directional_speed, 
-                                species_evo_level)]
-
-saveRDS(niche_traits_se, "../Data/niche_traits/niche_traits_fn_se.rda")
-
-outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
-df_all1_without_outliers<-df_all1[!(global_id %in% unique(outliers$global_id))]
-niche_traits_se<-df_all1_without_outliers[, .(V_range=mean(V_range), sd_V_range=sd(V_range),
-                             V_max=mean(V_max), sd_V_max=sd(V_max),
-                             V_min=mean(V_min), sd_V_min=sd(V_min),
-                             V_mean=mean(V_mean), sd_V_mean=sd(V_mean)),
-                         by=list(year, evo_type, nb, da, V_L,
+df_all1<-readRDS("../Data/niche_traits/niche_traits_rn.rda")
+df_all1$range_v<-df_all1$max_v - df_all1$min_v
+niche_traits_se<-df_all1[, .(V_range=mean(range_v), sd_V_range=sd(range_v),
+                             V_max=mean(max_v), sd_V_max=sd(max_v),
+                             V_min=mean(min_v), sd_V_min=sd(min_v),
+                             N_CELLS=mean(N_CELLS), sd_N_CELLS=sd(N_CELLS), 
+                             N_Individual=mean(N_Individual), sd_N_Individual=sd(N_Individual)
+                             ),
+                         by=list(year, evo_type, nb, da, var,
                                  species_evo_type, directional_speed, 
                                  species_evo_level)]
 
-saveRDS(niche_traits_se, "../Data/niche_traits/niche_traits_fn_se_without_outliers_3SD.rda")
+saveRDS(niche_traits_se, "../Data/niche_traits/niche_traits_rn_se.rda")
+
+
+outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
+df_all1_without_outliers<-df_all1[!(global_id %in% unique(outliers$global_id))]
+niche_traits_se<-df_all1_without_outliers[, .(V_range=mean(range_v), sd_V_range=sd(range_v),
+                                              V_max=mean(max_v), sd_V_max=sd(max_v),
+                                              V_min=mean(min_v), sd_V_min=sd(min_v),
+                                              N_CELLS=mean(N_CELLS), sd_N_CELLS=sd(N_CELLS), 
+                                              N_Individual=mean(N_Individual), sd_N_Individual=sd(N_Individual)),
+                                          by=list(year, evo_type, nb, da, var,
+                                                  species_evo_type, directional_speed, 
+                                                  species_evo_level)]
+
+saveRDS(niche_traits_se, "../Data/niche_traits/niche_traits_rn_se_without_outliers_3SD.rda")
+
+

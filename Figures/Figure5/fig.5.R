@@ -7,14 +7,14 @@ library(sf)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 
 
-lat_se<-readRDS("../Data/lat_gradient_nb_da.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_nb_da_3SD.rda")
 lat_se$evo_type<-format_evoType(lat_se$species_evo_type)
 lat_se$label<-format_evoType_amplitude(lat_se$evo_type, lat_se$directional_speed, order=1)
 y<-1198
 setorderv(lat_se, "mid")
 
-lat_se<-readRDS("../Data/lat_gradient_all.rda")
-lat_band_df<-readRDS("../Data/lat_band_n_land.rda")
+lat_se<-readRDS("../Data/lat_gradient/lat_gradient_all_3SD.rda")
+lat_band_df<-readRDS("../Data/lat_gradient/lat_band_n_land.rda")
 lat_se_n_land<-merge(lat_se, lat_band_df, by=c("from", "to", "mid"))
 lat_se_n_land$MEAN_Species<-lat_se_n_land$N_Species/lat_se_n_land$n_land
 
@@ -92,3 +92,4 @@ p<-annotate_figure(p, bottom = "Number of species")
 
 ggsave(p, filename="../Figures/Figure5/fig.5.png",
        width=12, height=6, bg="white")
+p

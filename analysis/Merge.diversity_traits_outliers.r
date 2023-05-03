@@ -5,7 +5,7 @@ library(DBI)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
-setDTthreads(20)
+setDTthreads(1)
 print(sprintf("Number of core(s) is(are) %d.", getDTthreads()))
 
 
@@ -19,14 +19,16 @@ dbDisconnect(mydb)
 i=233
 
 
-nb<-"BROAD"
+nb<-"NARROW"
 da<-"POOR"
 simulations<-simulations[which(((simulations$nb==nb & simulations$da==da))),]
 simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
 #simulations<-simulations[which(simulations$species_evo_type==1),]
 #simulations<-simulations[which(simulations$is_run==1),]
-
+outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
+outliers<-unique(outliers$global_id)
+simulations<-simulations[which(simulations$global_id %in% outliers),]
 table(simulations$species_evo_type)
 
 table(simulations[, c("nb", "da")])
@@ -39,10 +41,10 @@ for (t in c(1:7)){
   #all_df<-simulations[which(simulations$global_id %in% sub_seeds),]
   all_df2<-simulations[which(simulations$species_evo_type==t),]
   for (ratio in unique(all_df2$directional_speed)){
-    target<-sprintf("../Data/diversity_items/%s_%s_%d_%s.rda", 
+    target<-sprintf("../Data/diversity_items/%s_%s_%d_%s_3SD_outliers.rda", 
                     nb, da, t, as.character(ratio))
     if (file.exists(target)){
-      next()
+      #next()
     }
     all_df<-all_df2[which(all_df2$directional_speed==ratio),]
     all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
@@ -103,23 +105,12 @@ for (t in c(1:7)){
     }
     
     if (T){
-      df_all_df_list<-list()
-      for (j in seq(1, 1000, by=100)){
-        
-        end_index<-ifelse(j==901, length(df_all), j+99)
-        df_all_df_item<-rbindlist(df_all[j:end_index])
-        diversity_se_item<-df_all_df_item[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
-                                by=list(year, global_id, da, nb, evo_type, 
-                                        species_evo_type, directional_speed,
-                                        species_evo_level)]
-        
-        df_all_df_list[[length(df_all_df_list)+1]]<-diversity_se_item
-      }
-      df_all_df_list<-rbindlist(df_all_df_list)
+      
+      df_all_df_list<-rbindlist(df_all)
       diversity_se<-df_all_df_list[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
-                              by=list(year, global_id, da, nb, evo_type, 
-                                      species_evo_type, directional_speed,
-                                      species_evo_level)]
+                                   by=list(year, global_id, da, nb, evo_type, 
+                                           species_evo_type, directional_speed,
+                                           species_evo_level)]
       saveRDS(diversity_se, target)
       
       
@@ -129,81 +120,6 @@ for (t in c(1:7)){
 }
 
 
-if (F){
-  base_db<-"../Configuration/conf.sqlite"
-  mydb <- dbConnect(RSQLite::SQLite(), base_db)
-  #mydb <- dbConnect(RSQLite::SQLite(), "/media/huijieqiao/SSD_Fast/conf.sqlite")
-  simulations_dt<-data.table(dbReadTable(mydb, "simulations"))
-  simulations_dt<-simulations_dt[is_run==1]
-  dbDisconnect(mydb)
-  
-  coms<-simulations_dt[,.(N=.N), by=list(nb, da, species_evo_type, directional_speed)]
-  df<-list()
-  df_outliers<-list()
-  for (i in c(1:nrow(coms))){
-    print(paste(i, nrow(coms)))
-    item<-coms[i]
-    file1<-sprintf("../Data/diversity_items/%s_%s_%d_%s.rda", item$nb, item$da,
-                   item$species_evo_type, as.character(item$directional_speed))
-    df_item1<-readRDS(file1)
-    df[[length(df)+1]]<-df_item1
-    file2<-sprintf("../Data/diversity_items/%s_%s_%d_%s_3SD_outliers.rda", item$nb, item$da,
-                   item$species_evo_type, as.character(item$directional_speed))
-    df_item2<-readRDS(file2)
-    df_outliers[[length(df_outliers)+1]]<-df_item2
-  }
-  df_full<-rbindlist(df)
-  df_outliers_full<-rbindlist(df_outliers)
-  saveRDS(df_full, "../Data/diversity/diversity_full.rda")
-  saveRDS(df_outliers_full, "../Data/diversity/diversity_3SD_outlier_full.rda")
-  df_outliers_merged<-merge(df_full, df_outliers_full, by=c("year", "global_id", "da", "nb",
-                                                            "evo_type", "species_evo_type", 
-                                                            "directional_speed", "species_evo_level"),
-                            all.x=T)
-  df_outliers_merged[is.na(N_SPECIES.y)]$N_SPECIES.y<-0
-  df_outliers_merged$N_SPECIES<-df_outliers_merged$N_SPECIES.x - df_outliers_merged$N_SPECIES.y
-  saveRDS(df_outliers_merged, "../Data/diversity/diversity_3SD_without_outlier_full.rda")
-  
-  df_outliers_last_year<-df_outliers_full[year==0]
-  saveRDS(df_outliers_last_year, "../Data/diversity/diversity_3SD_outlier_last_year.rda")
-  
-  df_outliers_merged_last_year<-df_outliers_merged[year==0]
-  saveRDS(df_outliers_merged_last_year, "../Data/diversity/diversity_3SD_without_outlier_last_year.rda")
-  
-  
-  
-  df_outliers_iqr<-list()
-  for (i in c(1:nrow(coms))){
-    print(paste(i, nrow(coms)))
-    item<-coms[i]
-    file2<-sprintf("../Data/diversity_items/%s_%s_%d_%s_IQR_outliers.rda", item$nb, item$da,
-                   item$species_evo_type, as.character(item$directional_speed))
-    df_item2<-readRDS(file2)
-    df_outliers_iqr[[length(df_outliers_iqr)+1]]<-df_item2
-  }
-  df_outliers_iqr_full<-rbindlist(df_outliers_iqr)
-  saveRDS(df_outliers_iqr_full, "../Data/diversity/diversity_IQR_outlier_full.rda")
-  df_outliers_irq_merged<-merge(df_full, df_outliers_iqr_full, by=c("year", "global_id", "da", "nb",
-                                                            "evo_type", "species_evo_type", 
-                                                            "directional_speed", "species_evo_level"),
-                            all.x=T)
-  df_outliers_irq_merged[is.na(N_SPECIES.y)]$N_SPECIES.y<-0
-  df_outliers_irq_merged$N_SPECIES<-df_outliers_irq_merged$N_SPECIES.x - 
-    df_outliers_irq_merged$N_SPECIES.y
-  saveRDS(df_outliers_irq_merged, "../Data/diversity/diversity_IQR_without_outlier_full.rda")
-  
-  df_outliers_iqr_last_year<-df_outliers_iqr_full[year==0]
-  saveRDS(df_outliers_iqr_last_year, "../Data/diversity/diversity_IQR_outlier_last_year.rda")
-
-  df_outliers_irq_merged_last_year<-df_outliers_irq_merged[year==0]
-  saveRDS(df_outliers_irq_merged_last_year, "../Data/diversity/diversity_IQR_without_outlier_last_year.rda")
-  
-  df_full_last_year<-df_full[year==0]
-  saveRDS(df_full_last_year, "../Data/diversity/diversity_last_year.rda")
-  
-  
-  
-}
 
 
 
@@ -280,15 +196,6 @@ if (F){
   library(phylobase)
   library(ggpubr)
   library(heatmaply)
-  diversity_new_outliers<-readRDS("../Data/diversity_items/BROAD_GOOD_1_0_3SD_outliers.rda")
-  diversity_new_removed_outliers<-merge(diversity_new, diversity_new_outliers,
-                                        by=c("year", "global_id", "da", "nb", "evo_type",
-                                             "species_evo_type", "directional_speed", 
-                                             "species_evo_level"),
-                                        all=T)
-  diversity_new_removed_outliers[is.na(N_SPECIES.y)]$N_SPECIES.y<-0
-  diversity_new_removed_outliers$N_SPECIES<-diversity_new_removed_outliers$N_SPECIES.x - 
-    diversity_new_removed_outliers$N_SPECIES.y
   
   polygon<-readRDS("../Figures/Example/polygon.rda")
   world <- ne_countries(scale = "small", returnclass = "sf")
@@ -298,7 +205,7 @@ if (F){
   crs_america<-"+proj=laea +lat_0=30 +lon_0=-90 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
   
   
-  item_y<-diversity_new_outliers[year==0]
+  item_y<-diversity_new[year==0]
   item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
   
   threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))

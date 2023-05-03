@@ -39,19 +39,23 @@ all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 #item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==1361&species_evo_type==2&directional_speed==0.1]
 #item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==1567&species_evo_type==2&directional_speed==0.1]
-i=1
-
+i=68
+all_df<-all_df[which(all_df$species_evo_level==0),]
+table(all_df$species_evo_type)
+table(all_df$species_evo_level)
 for (i in c(1:nrow(all_df))){
   
  
   item<-all_df[i,]
   
-  sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)
+  sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
+              item$directional_speed, item$species_evo_level)
   print(paste(i, nrow(all_df), sp))
   if ((item$species_evo_level==1)&(item$nb=="BROAD")){
     print("1 broad skip")
     next()
   }
+  
   
   if ((item$species_evo_level==1)&(item$species_evo_type==1)){
     print("1 1 skip")
@@ -62,25 +66,30 @@ for (i in c(1:nrow(all_df))){
     base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results_1"
   }else{
     if ((item$nb=="BROAD")&(item$da=="GOOD")){
-      base<-"../Results"
+      base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
     }else{
       base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
     }
   }
   
-  ttt<-sprintf("%s/%s/%s.N.rda", base, sp, sp)
+  ttt<-sprintf("%s/%s/%s.N.speciation.extinction.rda", base, sp, sp)
   
   if (file.exists(ttt)){
-    print("exist skip")
-    next()
+    
+    size<-file.size(ttt)
+    if (size>100){
+      
+      #print(sprintf("rm -rf %s", ttt))
+      next()
+    }
+    print("redo")
+    #next()
   }
+  
   
   log<-sprintf("%s/%s/%s.sqlite", base, sp, sp)
   
-  if (!file.exists(log)){
-    print("no log, skip")
-    next()
-  }
+  
   
   saveRDS(NULL, ttt)
   

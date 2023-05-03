@@ -28,19 +28,6 @@ species_evo_types<-data.frame(species_evo_type=c(1,2,2,2,3,3,3,4,4,4,5,6,7),
                                                   0.5,0.1,0.01,0.01,0.01,0.01))
 nb<-c("BROAD", "NARROW")
 da<-c("GOOD", "POOR")
-conf<-data.table(expand.grid(nb=nb, da=da, global_id=sub_seeds, species_evo_level=c(0, 1), stringsAsFactors = F))
-
-i=2
-all_df<-NULL
-for (i in c(1:nrow(species_evo_types))){
-  item<-species_evo_types[i,]
-  ss<-conf
-  ss$species_evo_type<-item$species_evo_type
-  ss$directional_speed<-item$directional_speed
-  all_df<-bind(all_df, ss)
-}
-all_df<-all_df[!((species_evo_level==1)&(species_evo_type==1))]
-all_df$directional_speed<-as.character(all_df$directional_speed)
 
 base_db<-"../Configuration/conf.sqlite"
 mydb <- dbConnect(RSQLite::SQLite(), base_db)
@@ -50,9 +37,9 @@ dbDisconnect(mydb)
 
 i=1
 
-nb<-"NARROW"
-da<-"POOR"
-species_evo_level<-1
+nb<-"BROAD"
+da<-"GOOD"
+species_evo_level<-0
 
 if (species_evo_level==0){
   simulations<-simulations[which((simulations$nb==nb)&
@@ -94,7 +81,7 @@ for (i in c(1:nrow(all_df))){
   
   if (species_evo_level==0){
     if ((nb=="BROAD")&(da=="GOOD")){
-      ttt<-sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp)
+      ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)
     }else{
       ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)  
     }
@@ -111,7 +98,11 @@ for (i in c(1:nrow(all_df))){
     #print("skip")
     #next()
     print(ttt)
-    asdf
+    next()
+    
+  }
+  if (file.size(ttt)<100){
+    next()
   }
   #print(sprintf("rm %s", ttt))
   item_df<-readRDS(ttt)
@@ -134,7 +125,7 @@ for (i in c(1:nrow(all_df))){
 
 df_all<-rbindlist(df_all)
 
-saveRDS(df_all, sprintf("../Data/distribution_traits_%s_%s_%d.rda", nb, da, species_evo_level))
+saveRDS(df_all, sprintf("../Data/distribution_traits_items/distribution_traits_%s_%s.rda", nb, da))
 
 if (F){
   ddd<-readRDS("../Data/distribution_traits/distribution_traits_se.rda")

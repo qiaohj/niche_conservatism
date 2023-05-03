@@ -37,7 +37,7 @@ dbDisconnect(mydb)
 i=1
 
 nb<-"BROAD"
-da<-"POOR"
+da<-"GOOD"
 species_evo_level<-0
 
 if (species_evo_level==0){
@@ -59,9 +59,9 @@ if (species_evo_level==0){
   
   simulations<-rbind(simulations1, simulations2)
 }
-outlier_type<-"IQR"
+outlier_type<-"3SD"
 outlier_ids<-readRDS(sprintf("../Data/outliers/outliers_%s.rda", outlier_type))
-simulations<-simulations[which(!(simulations$global_id %in% outlier_ids)),]
+simulations<-simulations[which(!(simulations$global_id %in% unique(outlier_ids$global_id))),]
 
 all_df<-simulations
 
@@ -100,7 +100,13 @@ for (i in c(1:nrow(all_df))){
     #print("skip")
     #next()
     print(ttt)
-    asdf
+    next()
+  }
+  if (file.size(ttt)<100){
+    #print("skip")
+    #next()
+    print(ttt)
+    next()
   }
   #print(sprintf("rm %s", ttt))
   item_df<-readRDS(ttt)

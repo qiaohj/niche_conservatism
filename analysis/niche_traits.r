@@ -5,7 +5,7 @@ library(DBI)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
-setDTthreads(30)
+setDTthreads(3)
 print(sprintf("Number of core(s) is(are) %d.", getDTthreads()))
 
 base_db<-"../Configuration/env_Hadley3D.sqlite"
@@ -29,7 +29,7 @@ dbDisconnect(mydb)
 i=233
 
 #simulations<-simulations[which(((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
-#simulations<-simulations[which(simulations$species_evo_level==0),]
+simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
 #simulations<-simulations[which(simulations$species_evo_type %in% c(4)),]
 
@@ -47,7 +47,8 @@ i=1
 
 for (i in c(1:nrow(all_df))){
   item<-all_df[i,]
-  sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)
+  sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
+              item$directional_speed, item$species_evo_level)
   print(paste(i, nrow(all_df), sp))
   if ((item$species_evo_level==1)&(item$nb=="BROAD")){
     print("1 broad skip")
@@ -63,7 +64,7 @@ for (i in c(1:nrow(all_df))){
   }else{
     if ((item$nb=="BROAD")&(item$da=="GOOD")){
       
-      base<-"../Results"
+      base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
     }else{
       base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
     }

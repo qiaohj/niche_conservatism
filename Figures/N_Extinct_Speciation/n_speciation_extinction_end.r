@@ -3,6 +3,28 @@ library(ggthemes)
 library(data.table)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 if (F){
+  d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD.rda")
+  d1$species_evo_level<-0
+  
+  d2<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_POOR.rda")
+  d2$species_evo_level<-0
+  
+  d3<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_GOOD.rda")
+  d3$species_evo_level<-0
+  
+  d4<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR.rda")
+  d4$species_evo_level<-0
+  
+  d
+  
+  d<-rbindlist(list(d1, d2, d3, d4))
+  saveRDS(d, "../Data/N_speciation_extinction/N_speciation_extinction.rda")
+  
+  d_final<-d[year==0]
+  summary(d_final$N_SPECIES)
+  mean<-mean(d_final[N_SPECIES>0]$N_SPECIES)
+  sd<-sd(d_final[N_SPECIES>0]$N_SPECIES)
+  
   d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD_without_IQR_outliers.rda")
   d1$species_evo_level<-0
   
@@ -18,38 +40,57 @@ if (F){
   d
   
   d<-rbindlist(list(d1, d2, d3, d4))
-  saveRDS(d, "../Data/N_speciation_extinction/N_speciation_extinction_without_IQR_outliers.rda")
+  saveRDS(d, "../Data/N_speciation_extinction/N_speciation_extinction_without_3SD_outliers.rda")
   
   
-  d1<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_GOOD_without_IQR_outliers.rda")
+  d1<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_GOOD_without_3SD_outliers.rda")
   d1$species_evo_level<-0
   
-  d2<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_POOR_without_IQR_outliers.rda")
+  d2<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_POOR_without_3SD_outliers.rda")
   d2$species_evo_level<-0
-  colnames(d2)[17]<-"global_id"
-  d3<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_GOOD_without_IQR_outliers.rda")
+  #colnames(d2)[17]<-"global_id"
+  d3<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_GOOD_without_3SD_outliers.rda")
   d3$species_evo_level<-0
   
-  d4<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_POOR_without_IQR_outliers.rda")
+  d4<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_POOR_without_3SD_outliers.rda")
   d4$species_evo_level<-0
   
   
   
   d<-rbindlist(list(d1, d2, d3, d4))
   
-  saveRDS(d, "../Data/distribution_traits/distribution_traits_without_IQR_outliers.rda")
+  saveRDS(d, "../Data/distribution_traits/distribution_traits_without_3SD_outliers.rda")
+  
+  
+  
+  d1<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_GOOD.rda")
+  d1$species_evo_level<-0
+  
+  d2<-readRDS("../Data/distribution_traits_items/distribution_traits_BROAD_POOR.rda")
+  d2$species_evo_level<-0
+  #colnames(d2)[17]<-"global_id"
+  d3<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_GOOD.rda")
+  d3$species_evo_level<-0
+  
+  d4<-readRDS("../Data/distribution_traits_items/distribution_traits_NARROW_POOR.rda")
+  d4$species_evo_level<-0
+  
+  
+  
+  d<-rbindlist(list(d1, d2, d3, d4))
+  
+  saveRDS(d, "../Data/distribution_traits/distribution_traits.rda")
   
 }
 if (F){
   d<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
-  
   #cols<-c("nb", "da", "global_id", "species_evo_type", "directional_speed", "species_evo_level")
   #d[, min_year:=min(year), by=cols]
   
   #d_unique<-unique(d[, ..cols])
   d$outlier<-"F"
-  outliers<-readRDS("../Data/outliers/outliers_IQR.rda")
-  d[global_id %in% outliers]$outlier<-"T"
+  outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
+  d[global_id %in% unique(outliers$global_id)]$outlier<-"T"
   d_end<-d[year==0]
   range(d_end$N_SPECIES)
   sum(d_end$N_SPECIES)
@@ -73,7 +114,10 @@ if (F){
   d_se_without_ourliers$label<-paste(d_se_without_ourliers$nb, d_se_without_ourliers$da)
   d_se_without_ourliers$label2<-paste(d_se_without_ourliers$species_evo_type, d_se_without_ourliers$directional_speed)
   
-  p<-ggplot(d_se_without_ourliers[species_evo_level==0 & year==0])+
+  p<-ggplot(d_se_without_ourliers[((directional_speed %in% c(0) & species_evo_type==1) |
+                                    (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
+                                    (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7))) &
+                                    species_evo_level==0 & year==0])+
     geom_bar(aes(x=label2, y=N_SPECIES, fill=label), 
              stat = "identity", position = position_dodge(0.9))+
     scale_fill_colorblind()
@@ -161,20 +205,21 @@ d_se$evo_type<-format_evoType(d_se$species_evo_type)
 d_se_all<-d_se[, .(N_SPECIES=sum(N_SPECIES),
                    N_SPECIATION=sum(N_SPECIATION),
                    N_EXTINCTION=sum(N_EXTINCTION)),
-               by=list(species_evo_level, species_evo_type, directional_speed, year, evo_type)]
+               by=list(species_evo_level, species_evo_type, 
+                       directional_speed, year, evo_type, outlier)]
 cor(d_se$N_SPECIES, d_se$N_SPECIATION)
 
-cols<-c("N_SPECIES", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type")
+cols<-c("N_SPECIES", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type", "outlier")
 d_se_all_fig1<-d_se_all[, ..cols]
 colnames(d_se_all_fig1)[1]<-"N"
 d_se_all_fig1$type<-"Number of species"
 
-cols<-c("N_SPECIATION", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type")
+cols<-c("N_SPECIATION", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type", "outlier")
 d_se_all_fig2<-d_se_all[, ..cols]
 colnames(d_se_all_fig2)[1]<-"N"
 d_se_all_fig2$type<-"Number of speciation"
 
-cols<-c("N_EXTINCTION", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type")
+cols<-c("N_EXTINCTION", "species_evo_level", "species_evo_type", "directional_speed", "year", "evo_type", "outlier")
 d_se_all_fig3<-d_se_all[, ..cols]
 colnames(d_se_all_fig3)[1]<-"N"
 d_se_all_fig3$type<-"Number of extinction"
@@ -184,7 +229,10 @@ d_se_all_fig$type<-factor(d_se_all_fig$type,
 d_se_all_fig$label<-format_evoType_amplitude(d_se_all_fig$evo_type, d_se_all_fig$directional_speed, order=-1)
 
 
-p<-ggplot(d_se_all_fig[year==0])+
+p<-ggplot(d_se_all_fig[((directional_speed %in% c(0) & species_evo_type==1) |
+                          (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
+                          (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7))) &
+                         outlier=="F" & year==0])+
   geom_bar(aes(y=label, x=N, fill=type), position="dodge2", stat = "identity")+
   theme_bw()+
   theme(axis.text.x=element_text(angle=-90, hjust=0, vjust=0))+
@@ -195,7 +243,7 @@ ggsave("../Figures/N_Species/n_species_speciation_extinction.png", width=8, heig
 
 d_se$label2<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, order=-1)
 #d_se$label<-factor(d_se$label, levels = c("B"))
-p<-ggplot(d_se[year==0&species_evo_level==0])+
+p<-ggplot(d_se[year==0&species_evo_level==0 & outlier=="F"])+
   geom_bar(aes(y=label2, x=N_SPECIES, fill=label), 
            stat = "identity", position = position_dodge(0.9))+
   labs(x="", y="Number of species", fill="niche breadth & dispersal ability")+
@@ -206,7 +254,7 @@ p<-ggplot(d_se[year==0&species_evo_level==0])+
 p
 ggsave(p, filename="../Figures/N_Species/N_Species_end.png", width=8, height=6)
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[outlier=="F" & year<1198&species_evo_level==0])+
   geom_line(aes(x=year*-0.1, y=N_SPECIES, color=evo_type, linetype=factor(directional_speed)))+
   labs(x="X k years before present", y="Number of species", color="Evolution type", linetype="Evolution rate")+
   theme_bw()+
@@ -219,7 +267,7 @@ p
 
 ggsave(p, filename="../Figures/N_Species/N_Species.png", width=12, height=6)
 
-p<-ggplot(d_se_seed)+
+p<-ggplot(d_se_seed[outlier=="F"])+
   geom_line(aes(x=year*-1, y=N_SEED, color=factor(species_evo_type), 
                 linetype=factor(directional_speed)))+
   theme_bw()+
@@ -229,7 +277,7 @@ p<-ggplot(d_se_seed)+
 p
 ggsave(p, filename="../Figures/N_Species/N_Seed.png", width=12, height=10)
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[year<1198&species_evo_level==0&outlier=="F"])+
   geom_line(aes(x=year*-0.1, y=N_SPECIATION, color=evo_type, linetype=factor(directional_speed)))+
   labs(x="X k years before present", y="Number of speciations", color="Evolution type", linetype="Evolution rate")+
   theme_bw()+
@@ -240,7 +288,7 @@ p<-ggplot(d_se[year<1198&species_evo_level==0])+
 p
 ggsave(p, filename="../Figures/N_Species/N_SPECIATION.png", width=12, height=6)
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[year<1198&species_evo_level==0&outlier=="F"])+
   geom_line(aes(x=year*-0.1, y=N_EXTINCTION, color=evo_type, linetype=factor(directional_speed)))+
   labs(x="X k years before present", y="Number of extinctions", color="Evolution type", linetype="Evolution rate")+
   theme_bw()+
@@ -255,7 +303,7 @@ p
 ggsave(p, filename="../Figures/N_Species/N_EXTINCTION.png", width=12, height=6)
 
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[year<1198&species_evo_level==0&outlier=="F"])+
   geom_line(aes(x=year*-0.1, y=N_EXTINCTION * 1000 / (N_SPECIES + N_EXTINCTION), color=evo_type, linetype=factor(directional_speed)))+
   labs(x="X k years before present", y="Number of extinctions per 1k species", color="Evolution type", linetype="Evolution rate")+
   theme_bw()+
@@ -268,7 +316,7 @@ p
 
 ggsave(p, filename="../Figures/N_Species/N_EXTINCTION_Rate.png", width=12, height=6)
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[year<1198&species_evo_level==0&outlier=="F"])+
   geom_line(aes(x=year*-0.1, y=N_SPECIATION * 1000 / (N_SPECIES + N_EXTINCTION), 
                 color=evo_type, linetype=factor(directional_speed)))+
   labs(x="X k years before present", y="Number of speciations per 1k species", color="Evolution type", linetype="Evolution rate")+
@@ -283,7 +331,7 @@ p
 ggsave(p, filename="../Figures/N_Species/N_SPECIATION_Rate.png", width=12, height=6)
 
 d_se$label3<-format_evoType_amplitude(d_se$evo_type, d_se$directional_speed, order=1)
-p<-ggplot(d_se[year==0&species_evo_level==0])+
+p<-ggplot(d_se[year==0&species_evo_level==0&outlier=="F"])+
   geom_point(aes(x=label3, y=N_SPECIATION * 1000 / (N_SPECIES + N_EXTINCTION), color=label), 
              position = position_dodge2(0.1))+
   labs(x="Evolution type", y="Number of speciations per 1k species", 
@@ -299,7 +347,7 @@ p
 
 ggsave(p, filename="../Figures/N_Species/N_SPECIATION_Rate_end.png", width=12, height=6)
 
-p<-ggplot(d_se[year==0&species_evo_level==0])+
+p<-ggplot(d_se[year==0&species_evo_level==0&outlier=="F"])+
   geom_point(aes(x=label3, y=N_EXTINCTION * 1000 / (N_SPECIES + N_EXTINCTION), color=label), 
              position = position_dodge2(0.1))+
   labs(x="Evolution type", y="Number of extionctions per 1k species", 
@@ -318,7 +366,7 @@ ggsave(p, filename="../Figures/N_Species/N_EXTINCTION_Rate_end.png", width=12, h
 
 
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[year<1198&species_evo_level==0&outlier=="F"])+
   geom_line(aes(x=year*-1, y=N_SPECIATION_YEAR, 
                 color=factor(species_evo_type), linetype=factor(directional_speed)))+
   theme_bw()+
@@ -328,7 +376,7 @@ p<-ggplot(d_se[year<1198&species_evo_level==0])+
 p
 ggsave(p, filename="../Figures/N_Species/N_SPECIATION_YEAR.png", width=12, height=10)
 
-p<-ggplot(d_se[year<1198&species_evo_level==0])+
+p<-ggplot(d_se[year<1198&species_evo_level==0&outlier=="F"])+
   geom_line(aes(x=year*-1, y=N_EXTINCTION_YEAR, color=factor(species_evo_type), linetype=factor(directional_speed)))+
   theme_bw()+
   scale_fill_colorblind()+
@@ -337,7 +385,7 @@ p<-ggplot(d_se[year<1198&species_evo_level==0])+
 p
 ggsave(p, filename="../Figures/N_Species/N_EXTINCTION_YEAR.png", width=12, height=10)
 
-p<-ggplot(d_se[year<1000&species_evo_level==0])+
+p<-ggplot(d_se[year<1000&species_evo_level==0&outlier=="F"])+
   geom_boxplot(aes(x=label2, y=R_SPECIATION_SPECIES*100, fill=label))+
   theme_bw()+
   scale_fill_colorblind()+
@@ -346,7 +394,7 @@ p<-ggplot(d_se[year<1000&species_evo_level==0])+
 p
 ggsave(p, filename="../Figures/N_Species/R_SPECIATION_SPECIES.png", width=12, height=10)
 
-p<-ggplot(d_se[year<1000&species_evo_level==0])+
+p<-ggplot(d_se[year<1000&species_evo_level==0&outlier=="F"])+
   geom_boxplot(aes(x=label2, y=R_EXTINCTION_SPECIES*100, fill=label))+
   theme_bw()+
   scale_fill_colorblind()+
@@ -354,6 +402,7 @@ p<-ggplot(d_se[year<1000&species_evo_level==0])+
 
 p
 ggsave(p, filename="../Figures/N_Species/R_EXTINCTION_SPECIES.png", width=12, height=10)
+
 
 
 

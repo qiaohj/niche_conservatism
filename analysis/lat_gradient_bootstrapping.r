@@ -7,7 +7,7 @@ library(sf)
 setDTthreads(20)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
-df<-readRDS("../Data/lat_gradient_raw.rda")
+df<-readRDS("../Data/lat_gradient/lat_gradient_raw_3SD.rda")
 
 
 
@@ -18,6 +18,7 @@ if (F){
   simulations<-dbReadTable(mydb, "simulations")
   dbDisconnect(mydb)
   simulations<-data.table(simulations)
+  outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
   seeds<-mask_lonlat[global_id %in% simulations$global_id]
   lat_bands<-seq(-87.5, 87.5, by=5)
   lat_band_label<-seq(-85, 85, by=5)

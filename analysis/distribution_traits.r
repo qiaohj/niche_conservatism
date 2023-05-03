@@ -98,7 +98,32 @@ all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 all_df<-data.table(all_df)
 #all_df<-all_df[nb=="BROAD"&da=="GOOD"&species_evo_type==1]
-
+if (F){
+  for (i in c(1:nrow(all_df))){
+    
+    
+    item<-all_df[i]
+    
+    sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
+                item$directional_speed, item$species_evo_level)
+    print(paste(i, nrow(all_df), sp))
+    ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.rda", sp, sp)
+    if (!file.exists(ttt)){
+      next()
+    }
+    dfff<-readRDS(ttt)
+    if (is.null(dfff)){
+      unlink(ttt)
+      next()
+    }
+    ncols<-ncol(dfff)
+    if (ncols==6){
+      file.rename(ttt, sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.csv", sp, sp))
+    }else{
+      adsf
+    }
+  }
+}
 for (i in c(1:nrow(all_df))){
   
  
@@ -106,30 +131,31 @@ for (i in c(1:nrow(all_df))){
   
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)
   print(paste(i, nrow(all_df), sp))
-  ttt<-sprintf("../Results/%s/%s.N.csv", sp, sp)
+  ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.csv", sp, sp)
   #ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.N.rda", sp, sp)
-  ttt2<-sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp)
+  ttt2<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.DISTRIBUTION.csv", sp, sp)
   #ttt2<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.rda", sp, sp)
   
-  if (file.exists(ttt)){
-    #size<-file.size(ttt)
-    #if (size<100){
-    #  print(sprintf("rm -rf %s", ttt))
-    #}
-    print("skip")
-    next()
+  if (file.exists(ttt2)){
+    size<-file.size(ttt2)
+    if (size>100){
+      #print(sprintf("rm -rf %s", ttt))
+      next()
+    }
+    #print("skip")
+    
   }
   #next()
-  log<-sprintf("../Results/%s/%s.sqlite", sp, sp)
+  log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.sqlite", sp, sp)
   #log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.sqlite", sp, sp)
   
   if (!file.exists(log)){
     next()
   }
   
-  sp.log<-sprintf("../Results/%s/%s.sp.log", sp, sp)
+  sp.log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.sp.log", sp, sp)
   #sp.log<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.sp.log", sp, sp)
-  saveRDS(NULL, ttt)
+  saveRDS(NULL, ttt2)
   
   mydb <- dbConnect(RSQLite::SQLite(), log)
   trees<-dbReadTable(mydb, "trees")
@@ -161,8 +187,10 @@ for (i in c(1:nrow(all_df))){
   #df<-data.table(read.table(sprintf("../Results/%s/%s.log", sp, sp), head=F, sep=",", stringsAsFactors = F))
   #df<-data.table(read.table(sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.log", sp, sp), 
   #                          head=F, sep=",", stringsAsFactors = F))
-  df<-fread(sprintf("../Results/%s/%s.log", sp, sp))
-  
+  df<-fread(sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.log", sp, sp))
+  if (nrow(df)==0){
+    next()
+  }
   
   colnames(df)<-c("year", "global_id", "group_id", "n", "sp_id", "suitable")
   df<-df[suitable==1]
@@ -213,7 +241,7 @@ for (i in c(1:nrow(all_df))){
     
   }
   saveRDS(event_df, ttt)
-  saveRDS(distribution_df, sprintf("../Results/%s/%s.DISTRIBUTION.csv", sp, sp))
+  saveRDS(distribution_df, ttt2)
   #saveRDS(distribution_df, sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.rda", sp, sp))
   
   #g4<-ggtree(vert.tree, root.position = vert.tree$root.edge)+theme_tree2()+xlim(0, 1200)

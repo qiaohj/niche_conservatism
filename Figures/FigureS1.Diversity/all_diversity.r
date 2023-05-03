@@ -35,7 +35,7 @@ year<-0
 
 
 if (F){
-  diversity<-readRDS("../Data/diversity/diversity_without_IQR_outliers.rda")
+  diversity<-readRDS("../Data/diversity/diversity_3SD_without_outlier_last_year.rda")
   
   diversity_final<-diversity[year==0]
   diversity_final$group<-"random"
@@ -43,12 +43,14 @@ if (F){
   diversity_final[species_evo_type==2]$group<-"shift-directional"
   diversity_final[species_evo_type==3]$group<-"expansion-directional"
   diversity_final[species_evo_type==4]$group<-"expansion-omnidirectional"
-  saveRDS(diversity_final, "../Data/diversity/diversity_last_year_without_IQR_outliers.rda")
+  saveRDS(diversity_final, "../Data/diversity/diversity_3SD_without_outlier_last_year.rda")
 }
 
 
 create_fig<-function(item_y, label, barwidth=10){
   threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
+  #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
+  threshold<-5500
   max_n_sp<-max(item_y$N_SPECIES)
   min_n_sp<-min(item_y$N_SPECIES)
   if (threshold>max_n_sp){
@@ -78,7 +80,8 @@ create_fig<-function(item_y, label, barwidth=10){
     labs(colour="Species richness")+
     xlim(-12e6, 12e6)+
     ylim(-12e6, 12e6)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
+    theme(panel.grid.major = element_line(color = "#d4d4d4", 
+                                          linetype = "dashed", linewidth = 0.5), 
           panel.background = element_rect(fill = "#FFFFFF"),
           axis.title = element_blank(),
           legend.position = "bottom")+
@@ -100,7 +103,8 @@ create_fig<-function(item_y, label, barwidth=10){
     labs(colour="Species richness")+
     xlim(-12e6, 12e6)+
     ylim(-12e6, 12e6)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", linewidth = 0.5), 
+    theme(panel.grid.major = element_line(color = "#d4d4d4", 
+                                          linetype = "dashed", linewidth = 0.5), 
           panel.background = element_rect(fill = "#FFFFFF"),
           axis.title = element_blank(),
           legend.position = "bottom")+
@@ -115,8 +119,16 @@ create_fig<-function(item_y, label, barwidth=10){
 
 
 
-diversity_final<-readRDS("../Data/diversity_last_year_without_IQR_outliers.rda")
+diversity_final<-readRDS("../Data/diversity/diversity_3SD_without_outlier_last_year.rda")
+ll<-readRDS("../Data/mask_lonlat.rda")
+diversity_final<-merge(diversity_final, ll, by="global_id", all=T)
+diversity_final[is.na(N_SPECIES)]$N_SPECIES<-0
+diversity_final[group=="conservatism" & N_SPECIES==max(diversity_final[group=="conservatism"]$N_SPECIES)]
+#diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
+#  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
 p1<-create_fig(diversity_final[group=="conservatism"], "conservatism")
+
+ggsave(p1, filename="../Figures/FigureS1.Diversity/fig.s1.0.png")
 p2_1<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.01], 
                  "shift-directional (0.01)")
 p2_2<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.1], 
@@ -153,3 +165,4 @@ p4<-ggarrange(plotlist=list(p4_1, p4_2, p4_3), nrow=1)
 p5<-ggarrange(plotlist=list(p5_1, p5_2, p5_3), nrow=1)
 pp<-ggarrange(plotlist=list(p1, p2, p3, p4, p5), nrow=5, heights = c(2, 1,1,1,1))
 ggsave(pp, filename="../Figures/FigureS1.Diversity/fig.s1.without_IQR_outliers.png", width=12, height=16, bg="white")
+

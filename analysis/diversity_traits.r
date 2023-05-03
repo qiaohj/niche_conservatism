@@ -18,7 +18,7 @@ dbDisconnect(mydb)
 
 i=233
 
-#simulations<-simulations[which(!((simulations$nb=="BROAD" & simulations$da=="GOOD"))),]
+#simulations<-simulations[which(((simulations$nb=="BROAD" & simulations$da=="GOOD"))),]
 #simulations<-simulations[which(((simulations$nb=="NARROW"))),]
 #simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
@@ -32,13 +32,15 @@ table(simulations[, c("nb", "da")])
 template<-"%d_%s_%s_%d_%s_%d"
 #all_df<-simulations[which(simulations$global_id %in% sub_seeds),]
 all_df<-simulations
+all_df<-all_df[which(all_df$species_evo_level==0),]
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 all_df<-data.table(all_df)
 #19980
 #all_df<-all_df[species_evo_type==1]
 for (i in c(1:nrow(all_df))){
   item<-all_df[i,]
-  sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, item$directional_speed, item$species_evo_level)
+  sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
+              item$directional_speed, item$species_evo_level)
   
   print(paste(i, nrow(all_df), sp))
   if ((item$species_evo_level==1)&(item$nb=="BROAD")){
@@ -53,7 +55,7 @@ for (i in c(1:nrow(all_df))){
   if (item$species_evo_level==1){
     base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results_1"
   }else{
-    base<-"../Results"
+    base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
   }
   ttt<-sprintf("%s/%s/%s.diversity.rda", base, sp, sp)
   

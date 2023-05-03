@@ -26,7 +26,7 @@ dbDisconnect(mydb)
 
 i=233
 
-simulations<-simulations[which(((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
+#simulations<-simulations[which(((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
 simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
 #simulations<-simulations[which(!((simulations$nb=="BROAD")&(simulations$da=="GOOD"))),]
