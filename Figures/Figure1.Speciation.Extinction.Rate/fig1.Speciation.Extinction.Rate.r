@@ -236,6 +236,69 @@ d_se_all_100<-d_se_all_100[, .(N_SPECIES=sum(N_SPECIES),
                                    directional_speed, year_100, evo_type, outlier)]
 hist(d_se_all_100$R_SPECIATION_SPECIES)
 d_se_all_100[species_evo_type %in% c(5, 6, 7)]$directional_speed<-0
+
+p1<-ggplot(d_se_all[outlier=="F" & year<=1000])+
+  #geom_ribbon(aes(x=year_100*-10, ymin=R_SPECIATION_SPECIES-SD_R_SPECIATION_SPECIES, 
+  #                ymax=R_SPECIATION_SPECIES+SD_R_SPECIATION_SPECIES, 
+  #                fill=evo_type, 
+  #                linetype=factor(directional_speed)), alpha=0.3)+
+  geom_line(aes(x=year*-0.1, y=N_SPECIATION, color=evo_type, 
+                linetype=factor(directional_speed)))+
+  #geom_text(data=d_se_all[outlier=="F" & year==0], aes(x=1, y=R_SPECIATION_SPECIES, label=label, color=evo_type), 
+  #          hjust="left", vjust="middle", size=5)+
+  labs(x="Xk years before present", y="Number of speciation per 1k species", 
+       color="Evolution type", linetype="Evolution rate")+
+  theme_bw()+
+  scale_color_colorblind()+
+  scale_fill_colorblind()+
+  scale_y_continuous(breaks=c(0, 20000, 40000, 60000, 80000), labels=c("0k", "20k", "40k", "60k", "80k"))+
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "none")
+p1
+
+p2<-ggplot(d_se_all[outlier=="F" & year<=1000])+
+  #geom_ribbon(aes(x=year_100*-10, ymin=R_EXTINCTION_SPECIES-SD_R_EXTINCTION_SPECIES, 
+  #                ymax=R_EXTINCTION_SPECIES+SD_R_EXTINCTION_SPECIES, 
+  #                fill=evo_type, 
+  #                linetype=factor(directional_speed)), alpha=0.3)+
+  geom_line(aes(x=year*-0.1, y=N_EXTINCTION, color=evo_type, 
+                linetype=factor(directional_speed)))+
+  #geom_text(data=d_se_all[outlier=="F" & year==0], aes(x=1, y=R_SPECIATION_SPECIES, label=label, color=evo_type), 
+  #          hjust="left", vjust="middle", size=5)+
+  labs(x="Xk years before present", y="Number of extinction per 1k species", 
+       color="Evolution type", linetype="Evolution rate")+
+  theme_bw()+
+  scale_color_colorblind()+
+  scale_fill_colorblind()+
+  scale_y_continuous(breaks=c(0, 2000, 4000, 6000, 8000, 10000, 12000), labels=c("0k", "2k", "4k", "6k", "8k", "10k", "12k"))+
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        legend.position = "none")
+p2
+d_se_all[species_evo_type %in% c(5, 6, 7)]$directional_speed<-0
+p3<-ggplot(d_se_all[outlier=="F" & year<=1000])+
+  #geom_ribbon(aes(x=year_100*-10, ymin=R_EXTINCTION_SPECIES-SD_R_EXTINCTION_SPECIES, 
+  #                ymax=R_EXTINCTION_SPECIES+SD_R_EXTINCTION_SPECIES, 
+  #                fill=evo_type, 
+  #                linetype=factor(directional_speed)), alpha=0.3)+
+  geom_line(aes(x=year*-0.1, y=N_SPECIES, color=evo_type, 
+                linetype=factor(directional_speed)))+
+  #geom_text(data=d_se_all[outlier=="F" & year==0], aes(x=1, y=R_SPECIATION_SPECIES, label=label, color=evo_type), 
+  #          hjust="left", vjust="middle", size=5)+
+  labs(x="Xk years before present", y="Number of species", 
+       color="Evolution type", linetype="Evolution rate")+
+  theme_bw()+
+  scale_color_colorblind()+
+  scale_fill_colorblind()+
+  scale_y_continuous(breaks=c(0, 20000, 40000, 60000, 80000), labels=c("0k", "20k", "40k", "60k", "80k"))+
+  theme(legend.position = c(0.3, 0.51), legend.box="horizontal")
+#theme(legend.position = "none")
+p3
+p<-ggarrange(plotlist=list(p1, p2, p3), nrow=3, ncol=1, common.legend = F)
+ggsave(p, filename="../Figures/Figure1.Speciation.Extinction.Rate/Figure1.N.Speciation.Extinction.png", width=8, height=12)
+
+
 p1<-ggplot(d_se_all_100[outlier=="F" & year_100<=1000])+
   #geom_ribbon(aes(x=year_100*-10, ymin=R_SPECIATION_SPECIES-SD_R_SPECIATION_SPECIES, 
   #                ymax=R_SPECIATION_SPECIES+SD_R_SPECIATION_SPECIES, 

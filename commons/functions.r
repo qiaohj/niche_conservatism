@@ -19,7 +19,8 @@ evo_types<-c("conservatism",
              "expansion-omnidirectional",
              "random-central",
              "random-symmetrical",
-             "random-asymmetrical")
+             "random-asymmetrical",
+             "unknown")
 evo_type_amp<-data.frame(type=c("conservatism",
              "shift-directional", "shift-directional", "shift-directional",
              "expansion-directional", "expansion-directional", "expansion-directional",
@@ -38,7 +39,18 @@ format_evoType<-function(index){
   evo_type[index==5]<-evo_types[5]
   evo_type[index==6]<-evo_types[6]
   evo_type[index==7]<-evo_types[7]
+  evo_type[index==0]<-evo_types[8]
   evo_type<-factor(evo_type, levels=evo_types)
+}
+
+format_evoLabel<-function(evoType, speed){
+  if (evoType %in% c("conservatism", "random-central",
+                     "random-symmetrical", "random-asymmetrical",
+                     "unknown")){
+    evoType
+  }else{
+    sprintf("%s (%s)", evoType, as.character(speed))
+  }
 }
 
 format_evoType_amplitude<-function(evoType, amplitude, order=1){

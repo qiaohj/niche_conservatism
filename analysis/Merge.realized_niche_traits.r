@@ -88,6 +88,7 @@ saveRDS(df_all1, "../Data/niche_traits/niche_traits_rn.rda")
 
 df_all1<-readRDS("../Data/niche_traits/niche_traits_rn.rda")
 df_all1$range_v<-df_all1$max_v - df_all1$min_v
+
 niche_traits_se<-df_all1[, .(V_range=mean(range_v), sd_V_range=sd(range_v),
                              V_max=mean(max_v), sd_V_max=sd(max_v),
                              V_min=mean(min_v), sd_V_min=sd(min_v),

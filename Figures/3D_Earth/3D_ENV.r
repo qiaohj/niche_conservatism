@@ -36,15 +36,24 @@ dbDisconnect(envdb)
 v_prcp<-data.table(v_prcp)
 v_tmax<-data.table(v_tmax)
 v_tmin<-data.table(v_tmin)
-v_prcp_mean<-v_prcp[, .(mean_v=mean(v),
-                        sd_v=sd(v)),
-                    by=list(year)]
-v_tmax_mean<-v_tmax[, .(mean_v=mean(v),
-                        sd_v=sd(v)),
-                    by=list(year)]
-v_tmin_mean<-v_tmin[, .(mean_v=mean(v),
-                        sd_v=sd(v)),
-                    by=list(year)]
+v_prcp$var<-"Debiased_Maximum_Monthly_Precipitation"
+v_tmax$var<-"Debiased_Maximum_Monthly_Temperature"
+v_tmin$var<-"Debiased_Minimum_Monthly_Temperature"
+
+env_df_full<-rbindlist(list(v_prcp, v_tmax, v_tmin))
+env_df_full_next_year<-env_df_full
+env_df_full_next_year$year<-env_df_full_next_year$year+1
+colnames(env_df_full_next_year)[2]<-"next_v"
+env_df_full<-merge(env_df_full, env_df_full_next_year, by=c("global_id", "year", "var"))
+env_df_full$v_delta<-env_df_full$next_v - env_df_full$v
+saveRDS(env_df_full, "../Data/env_yearly_full.rda")
+env_df<-env_df_full[, .(mean_v=mean(v),
+                        sd_v=sd(v),
+                        v_delta=mean(v_delta),
+                        sd_v_delta=sd(v_delta)),
+                    by=list(year, var)]
+
+saveRDS(env_df, "../Data/env_yearly_avg.rda")
 wc_col<-cool_warm(2)
 p <- ggplot(v_tmax_mean, aes(x = year * -0.1))+
   geom_line(aes(y = mean_v), colour = wc_col[2])+
