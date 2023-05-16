@@ -23,7 +23,7 @@ speciation_extinction_all<-speciation_extinction[, .(N_SPECIES=sum(N_SPECIES),
                        directional_speed, year, evo_type, outlier)]
 speciation_extinction_all[, label:=format_evoLabel(evo_type, directional_speed), 
                           by = seq_len(nrow(speciation_extinction_all))]
-speciation_extinction_all$net_dr<-1 + speciation_extinction_all$R_SPECIATION_SPECIES/1000 - 
+speciation_extinction_all$net_dr<-speciation_extinction_all$R_SPECIATION_SPECIES/1000 - 
   speciation_extinction_all$R_EXTINCTION_SPECIES/1000
 hist(speciation_extinction_all$net_dr)
 
@@ -89,6 +89,9 @@ for (i in seq(from=-1100, to=0, by=10)){
   env_se$slope<-NULL
   env_se$N<-NULL
   df_se<-df_item[, .(net_dr=mean(net_dr, na.rm=T),
+                     N_SPECIES=mean(N_SPECIES, na.rm=T),
+                     R_SPECIATION_SPECIES=mean(R_SPECIATION_SPECIES, na.rm=T),
+                     R_EXTINCTION_SPECIES=mean(R_EXTINCTION_SPECIES, na.rm=T),
                 nb_next_delta_ratio=mean(V_range_next_delta_ratio, na.rm=T),
                 nb_next_delta_ratio_sd=sd(V_range_next_delta_ratio, na.rm=T),
                 lower_limit_delta=mean(V_min_delta, na.rm=T),
@@ -128,8 +131,8 @@ for (i in seq(from=-1100, to=0, by=10)){
   df_se_list[[length(df_se_list)+1]]<-df_se
 }
 df_se<-rbindlist(df_se_list)
-df_se$net_dr<-df_se$net_dr - 1
 
+saveRDS(df_se, "../Figures/LM/traits_ndr.rda")
 #corrlation
 colnames(df_se)
 vars<-c("lower_limit_delta_in_windows", "upper_limit_delta_in_windows",
