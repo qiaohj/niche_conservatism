@@ -28,7 +28,7 @@ i=233
 #simulations<-simulations[which(simulations$species_evo_level==0),]
 simulations<-simulations[which(simulations$is_run==1),]
 #simulations<-simulations[which(simulations$species_evo_type %in% c(4)),]
-  
+
 table(simulations$species_evo_type)
 
 table(simulations[, c("nb", "da")])
@@ -39,13 +39,13 @@ all_df<-simulations
 all_df<-all_df[sample(nrow(all_df), nrow(all_df)),]
 #item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==1361&species_evo_type==2&directional_speed==0.1]
 #item<-all_df[nb=="BROAD"&da=="GOOD"&global_id==1567&species_evo_type==2&directional_speed==0.1]
-i=68
+i=11000
 all_df<-all_df[which(all_df$species_evo_level==0),]
 table(all_df$species_evo_type)
 table(all_df$species_evo_level)
 for (i in c(1:nrow(all_df))){
   
- 
+  
   item<-all_df[i,]
   
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
@@ -55,11 +55,11 @@ for (i in c(1:nrow(all_df))){
   
   base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
   
-  ttt<-sprintf("%s/%s/%s.N.speciation.extinction_new.rda", base, sp, sp)
+  ttt<-sprintf("%s/%s/%s.N.speciation.extinction_rolling_windows.rda", base, sp, sp)
   
   if (file.exists(ttt)){
     print("skip")
-    next()
+    #next()
     size<-file.size(ttt)
     if (size>100){
       
@@ -69,13 +69,13 @@ for (i in c(1:nrow(all_df))){
     print("redo")
     #next()
   }
-  
+  saveRDS(NULL, ttt)
   
   log<-sprintf("%s/%s/%s.sqlite", base, sp, sp)
   
   
   
-  saveRDS(NULL, ttt)
+  
   
   mydb <- dbConnect(RSQLite::SQLite(), log)
   trees<-dbReadTable(mydb, "trees")
@@ -104,31 +104,37 @@ for (i in c(1:nrow(all_df))){
   nodes$event<-"SPECIATION"
   nodes[(type=="leaf")&(to==0), "event"]<-"NONE"
   nodes[(type=="leaf")&(to!=0), "event"]<-"EXTINCTION"
+  nodes$from<-nodes$from*-1
+  nodes$to<-nodes$to*-1
+  event_df<-data.table(from=seq(from=-1100, to=0, by=10)-100,
+                       to=seq(from=-1100, to=0, by=10),
+                       N_SPECIES=0,
+                       N_SPECIATION=0,
+                       N_EXTINCTION=0)
   
-  event_df<-data.table(year=c(0:1199),
-                   N_SPECIES=0,
-                   N_SPECIATION=0,
-                   N_EXTINCTION=0,
-                   N_SPECIATION_YEAR=0,
-                   N_EXTINCTION_YEAR=0,
-                   N_ALL_SPECIES=0)
+  
+  event_df[from==-1200]$N_SPECIES<-1
   
   
-  event_df[year==1199]$N_SPECIES<-1
-  for (j in c(1198:0)){
+  j=-680
+  for (j in seq(from=-1100, to=0, by=10)){
+    from_y<-j-100
+    to_y<-j
     #sub_df<-df[(year==j),]
-    event_df[year==j]$N_SPECIES<-nrow(nodes[from>=j&to<=j])
+    subnodes<-nodes[between(from, from_y, to_y) | between(to, from_y, to_y) |
+                     (from_y>=from & from_y<=to) | (to_y>=from & to_y<=to)]
     
-    event_df[year==j]$N_ALL_SPECIES<-nrow(nodes[from>=j])
-    sub_node<-nodes[to>=j]
-    event_df[year==j]$N_SPECIATION<-nrow(sub_node[event=="SPECIATION"])
-    event_df[year==j]$N_EXTINCTION<-nrow(sub_node[event=="EXTINCTION"])
     
-    sub_node<-nodes[to==j]
-    event_df[year==j]$N_SPECIATION_YEAR<-nrow(sub_node[event=="SPECIATION"])
-    event_df[year==j]$N_EXTINCTION_YEAR<-nrow(sub_node[event=="EXTINCTION"])
+    event_df[from==from_y]$N_SPECIES<-nrow(subnodes)
+    
+    subnodes<-nodes[between(to, from_y, to_y)]
+    event_df[from==from_y]$N_SPECIATION<-nrow(subnodes[event=="SPECIATION"])
+    event_df[from==from_y]$N_EXTINCTION<-nrow(subnodes[event=="EXTINCTION"])
+    
+    
     
   }
+  event_df$N_SPECIES <- event_df$N_SPECIES - event_df$N_SPECIATION
   saveRDS(event_df, ttt)
 }
 

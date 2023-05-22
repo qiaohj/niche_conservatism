@@ -15,8 +15,6 @@ if (F){
   d4<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR.rda")
   d4$species_evo_level<-0
   
-  d
-  
   d<-rbindlist(list(d1, d2, d3, d4))
   saveRDS(d, "../Data/N_speciation_extinction/N_speciation_extinction.rda")
   
@@ -25,16 +23,16 @@ if (F){
   mean<-mean(d_final[N_SPECIES>0]$N_SPECIES)
   sd<-sd(d_final[N_SPECIES>0]$N_SPECIES)
   
-  d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD_without_IQR_outliers.rda")
+  d1<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_GOOD_without_3SD_outliers.rda")
   d1$species_evo_level<-0
   
-  d2<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_POOR_without_IQR_outliers.rda")
+  d2<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_BROAD_POOR_without_3SD_outliers.rda")
   d2$species_evo_level<-0
   
-  d3<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_GOOD_without_IQR_outliers.rda")
+  d3<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_GOOD_without_3SD_outliers.rda")
   d3$species_evo_level<-0
   
-  d4<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR_without_IQR_outliers.rda")
+  d4<-readRDS("../Data/N_speciation_extinction_items/N_speciation_extinction_NARROW_POOR_without_3SD_outliers.rda")
   d4$species_evo_level<-0
   
   d

@@ -36,14 +36,10 @@ dbDisconnect(mydb)
 
 i=1
 
-nb<-"NARROW"
-da<-"GOOD"
 species_evo_level<-0
 
-simulations<-simulations[which((simulations$nb==nb)&
-                                 (simulations$is_run==1)&
-                                 (simulations$species_evo_level==species_evo_level)&
-                                 (simulations$da==da)),]
+simulations<-simulations[which((simulations$is_run==1)&
+                                 (simulations$species_evo_level==species_evo_level)),]
 all_df<-simulations
 
 table(all_df$species_evo_type)
@@ -61,7 +57,7 @@ for (i in c(1:nrow(all_df))){
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
               item$directional_speed, item$species_evo_level)
   #print(paste(i, nrow(all_df), sp))
-  ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.speciation.extinction_new.rda", sp, sp)  
+  ttt<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results/%s/%s.N.speciation.extinction_rolling_windows.rda", sp, sp)  
   if (!file.exists(ttt)){
     #print("skip")
     #next()
@@ -81,14 +77,6 @@ for (i in c(1:nrow(all_df))){
 }
 
 df_all<-rbindlist(df_all)
-df_all_null<-df_all[(species_evo_type)==1&(directional_speed==0)]
-df_all_null<-df_all_null[,c("nb", "da", "global_id", "year", 
-                            "N_SPECIES", "N_SPECIATION", "N_EXTINCTION")]
-colnames(df_all_null)<-c("nb", "da", "global_id", "year", 
-                         "N_SPECIES_null", "N_SPECIATION_null", "N_EXTINCTION_null")
-df_all_with_null<-merge(df_all, df_all_null, 
-                        by=c("nb", "da", "global_id", "year"),
-                        all=F)
-saveRDS(df_all_with_null, sprintf("../Data/N_speciation_extinction_items/N_speciation_extinction_%s_%s.rda", 
-                                  nb, da))
+
+saveRDS(df_all, "../Data/N_speciation_extinction/N_speciation_extinction_rolling_window.rda")
 
