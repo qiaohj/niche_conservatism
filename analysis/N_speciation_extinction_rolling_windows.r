@@ -59,7 +59,7 @@ for (i in c(1:nrow(all_df))){
   
   if (file.exists(ttt)){
     print("skip")
-    #next()
+    next()
     size<-file.size(ttt)
     if (size>100){
       
@@ -101,6 +101,7 @@ for (i in c(1:nrow(all_df))){
   nodes[, c("from","to") := data.table(str_split_fixed(PY,"-",2))]
   nodes$from<-as.numeric(nodes$from)
   nodes$to<-as.numeric(nodes$to)
+  nodes[is.na(to)]$to<-0
   nodes$event<-"SPECIATION"
   nodes[(type=="leaf")&(to==0), "event"]<-"NONE"
   nodes[(type=="leaf")&(to!=0), "event"]<-"EXTINCTION"

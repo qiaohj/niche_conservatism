@@ -36,8 +36,8 @@ dbDisconnect(mydb)
 
 i=1
 
-nb<-"NARROW"
-da<-"GOOD"
+nb<-"BROAD"
+da<-"POOR"
 species_evo_level<-0
 
 simulations<-simulations[which((simulations$nb==nb)&

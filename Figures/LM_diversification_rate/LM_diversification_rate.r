@@ -5,96 +5,7 @@ library(quantmod)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
 if (F){
-  d<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction_rolling_window.rda")
   
-  d$outlier<-"F"
-  outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
-  d[global_id %in% unique(outliers$global_id)]$outlier<-"T"
-  d<-d[outlier=="F"]
-  d<-d[((directional_speed %in% c(0) & species_evo_type==1) |
-          (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
-          (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7)))]
-
-  d$R_SPECIATION_SPECIES<-d$N_SPECIATION/d$N_SPECIES * 1000
-  d[is.nan(R_SPECIATION_SPECIES)]$R_SPECIATION_SPECIES<-0
-  d$R_EXTINCTION_SPECIES<-d$N_EXTINCTION/d$N_SPECIES * 1000
-  d[is.nan(R_EXTINCTION_SPECIES)]$R_EXTINCTION_SPECIES<-0
-  d$net_dr<-(d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)/1000
-  #d$SPECIES_PER_SPECIATION<-d$N_SPECIES/d$N_SPECIATION
-  
-  d$evo_type<-format_evoType(d$species_evo_type)
-  d[, label:=format_evoLabel(evo_type, directional_speed), 
-             by=seq_len(nrow(d))]
-  labels<-unique(d$label)
-  saveRDS(d, "../Figures/LM/raw_ndr_by_species.rda")
-  
-  d_next<-d
-  d_next$from<-d_next$from - 100
-  d_next<-d_next[, c("from", "N_SPECIES", "species_evo_type", "directional_speed", "nb", "da", "global_id")]
-  d_species_increasing_rate<-merge(d, d_next, by=c("from", "species_evo_type", "directional_speed", "nb", "da", "global_id"))
-  d_species_increasing_rate$species_increasing_rate<-
-    (d_species_increasing_rate$N_SPECIES.y - d_species_increasing_rate$N_SPECIES.x)/
-    d_species_increasing_rate$N_SPECIES.x
-  
-  df_N_SPECIES<-TukeyHSD_B("N_SPECIES", d)
-  d_final<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
-  d_final<-d_final[year==0]
-  d_final$outlier<-"F"
-  d_final[global_id %in% unique(outliers$global_id)]$outlier<-"T"
-  d_final<-d_final[outlier=="F"]
-  d_final<-d_final[((directional_speed %in% c(0) & species_evo_type==1) |
-          (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
-          (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7)))]
-  d_final$evo_type<-format_evoType(d_final$species_evo_type)
-  d_final[, label:=format_evoLabel(evo_type, directional_speed), 
-    by=seq_len(nrow(d_final))]
-  
-  d_final_N<-d_final[, .(N=.N), by=c("species_evo_type", "directional_speed", "nb", "da")]
-  colnames(d_final)[5]<-"N_SPECIES_FINAL"
-  df_N_SPECIES_FINAL<-TukeyHSD_B("N_SPECIES_FINAL", d_final)
-  df_species_increasing_rate<-TukeyHSD_B("species_increasing_rate", d_species_increasing_rate)
-  df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", d)
-  df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", d)
-  
-  d_max<-readRDS("../Data/N_speciation_extinction/N_species_per_speciation.rda")
-  
-  d_max<-d_max[!is.infinite(SPECIES_PER_SPECIATION)]
-  d_max$evo_type<-format_evoType(d_max$species_evo_type)
-  d_max[, label:=format_evoLabel(evo_type, directional_speed), 
-    by=seq_len(nrow(d_max))]
-  df_SPECIES_PER_SPECIATION<-TukeyHSD_B("SPECIES_PER_SPECIATION", d_max)
-  d$net_dr<-NULL
-  d$SPECIES_PER_SPECIATION<-NULL
-  d_ndr<-merge(d, d_max, by=c("species_evo_type", "directional_speed", "nb", "da", "global_id", "evo_type", "label"))
-  d_ndr$net_dr<-d_ndr$R_SPECIATION_SPECIES * d_ndr$SPECIES_PER_SPECIATION - d_ndr$R_EXTINCTION_SPECIES
-  d_ndr$net_dr_erin<-d_ndr$R_SPECIATION_SPECIES - d_ndr$R_EXTINCTION_SPECIES
-  
-  df_net_dr<-TukeyHSD_B("net_dr", d_ndr)
-  df_net_dr_erin<-TukeyHSD_B("net_dr_erin", d_ndr)
-  ggplot(d_max)+geom_boxplot(aes(y=SPECIES_PER_SPECIATION-1, x=label))
-  range(d_max$SPECIES_PER_SPECIATION)
-  ggplot(d_ndr)+geom_histogram(aes(y=net_dr))+facet_wrap(~label)
-  cor(d_ndr$N_SPECIES, d_ndr$net_dr)
-  df_result<-rbindlist(list(df_net_dr, df_net_dr_erin, df_N_SPECIES, df_N_SPECIES_FINAL,
-                            df_species_increasing_rate,
-                            df_R_SPECIATION_SPECIES, df_R_EXTINCTION_SPECIES,
-                            df_SPECIES_PER_SPECIATION))
-  saveRDS(df_result, "../Figures/TukeyHSD/TukeyHSD_by_species.rda")
-  write.csv(df_result, "../Figures/TukeyHSD/TukeyHSD_by_species.csv", row.names = F)
-  
-  df_result$alternative<-""
-  df_result[diff>0]$alternative<-"greater"
-  df_result[diff<0]$alternative<-"less"
-  table(df_result$alternative)
-  df_result$label<-gsub("-conservatism", "", df_result$label)
-  p<-ggplot(df_result[p_label!="" & !grepl("0.01", label)])+
-    geom_tile(aes(x=type, y=label, fill=alternative))+
-    geom_text(aes(x=type, y=label, label=alternative))+
-    scale_x_discrete(guide = guide_axis(n.dodge = 2))
-  p
-  
-  
-  ggsave(p, filename="../Figures/TukeyHSD/TukeyHSD.png", width=10, height=6)
   
 }
 if (F){
@@ -121,11 +32,11 @@ if (F){
   d[is.nan(R_SPECIATION_SPECIES)]$R_SPECIATION_SPECIES<-0
   d$R_EXTINCTION_SPECIES<-d$N_EXTINCTION/d$N_ALL_SPECIES * 1000
   d[is.nan(R_EXTINCTION_SPECIES)]$R_EXTINCTION_SPECIES<-0
-  d$net_dr<-d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES
+  #d$net_dr<-d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES
   
   d$year<-d$year* -1
   i=-1100
-  d$SPECIES_PER_SPECIATION<-d$N_ALL_SPECIES/d$N_SPECIATION
+  #d$SPECIES_PER_SPECIATION<-d$N_ALL_SPECIES/d$N_SPECIATION
   df_se_list<-list()
   for (i in seq(from=-1100, to=0, by=10)){
     print(i)
@@ -207,8 +118,8 @@ speciation_extinction_all<-speciation_extinction[, .(
           directional_speed, year, evo_type, outlier)]
 speciation_extinction_all[, label:=format_evoLabel(evo_type, directional_speed), 
                           by = seq_len(nrow(speciation_extinction_all))]
-speciation_extinction_all$net_dr<-speciation_extinction_all$R_SPECIATION_SPECIES/1000 - 
-  speciation_extinction_all$R_EXTINCTION_SPECIES/1000
+#speciation_extinction_all$net_dr<-speciation_extinction_all$R_SPECIATION_SPECIES/1000 - 
+#  speciation_extinction_all$R_EXTINCTION_SPECIES/1000
 hist(speciation_extinction_all[outlier=="F"]$net_dr)
 
 ggplot(speciation_extinction_all[outlier=="F"])+geom_point(aes(x=year, y=net_dr, color=label))
