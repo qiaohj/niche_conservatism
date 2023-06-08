@@ -8,7 +8,7 @@ library(phytools)
 library(geiger)
 library(stringr)
 library(tidyverse)
-library(plotKML)
+#library(plotKML)
 library(ggtree)
 library(RColorBrewer)
 

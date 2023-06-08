@@ -1,3 +1,5 @@
+library(phytools)
+library(TreePar)
 library(ggplot2)
 library(data.table)
 library(RSQLite)
@@ -51,7 +53,7 @@ for (i in c(1:nrow(all_df))){
   
   
   item<-all_df[i,]
-  #sp<-sprintf(template, 81, "GOOD", "BROAD", 1, 0, 0)
+  
   sp<-sprintf(template, item$global_id, item$da, item$nb, item$species_evo_type, 
               item$directional_speed, item$species_evo_level)
   print(paste(i, nrow(all_df), sp))
@@ -59,7 +61,7 @@ for (i in c(1:nrow(all_df))){
   
   base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
   
-  ttt<-sprintf("%s/%s/%s.N.speciation.extinction_rolling_windows.rda", base, sp, sp)
+  ttt<-sprintf("%s/%s/%s.net_dr_tree_based.rda", base, sp, sp)
   
   if (file.exists(ttt)){
     print("skip")
@@ -73,7 +75,8 @@ for (i in c(1:nrow(all_df))){
     print("redo")
     #next()
   }
-  saveRDS(NULL, ttt)
+  
+  #saveRDS(NULL, ttt)
   
   log<-sprintf("%s/%s/%s.sqlite", base, sp, sp)
   
@@ -91,27 +94,13 @@ for (i in c(1:nrow(all_df))){
     text.string<-sprintf("(a:0)%s", text.string)
   }
   vert.tree<-read.tree(text=text.string)
-  #plot(vert.tree)
-  #nodelabels()
   nodes<-data.table(label=c(vert.tree$tip.label, vert.tree$node.label),
                     type=c(rep("leaf", length(vert.tree$tip.label)),
                            rep("node", length(vert.tree$node.label))
                     )
   )
   nodes$id<-c(1:nrow(nodes))
-  #paths<-nodepath(vert.tree)
   
-  #nodeid(vert.tree, "SP3@58-49")
-  #vert.tree$edge
-  edge_table <- data.table(
-    "parent" = vert.tree$edge[,1],
-    "par.name" = sapply(vert.tree$edge[,1],
-                        select.tip.or.node,
-                        tree = vert.tree),
-    "child" = vert.tree$edge[,2],
-    "chi.name" = sapply(vert.tree$edge[,2],
-                        select.tip.or.node,
-                        tree = vert.tree))
   nodes<-nodes[label!="a"]
   if (nrow(nodes)==1){
     nodes$type<-"leaf"
@@ -124,60 +113,32 @@ for (i in c(1:nrow(all_df))){
   nodes$event<-"SPECIATION"
   nodes[(type=="leaf")&(to==0), "event"]<-"NONE"
   nodes[(type=="leaf")&(to!=0), "event"]<-"EXTINCTION"
-  nodes$from<-nodes$from*-1
-  nodes$to<-nodes$to*-1
-  event_df<-data.table(from=seq(from=-1000, to=0, by=10)-100,
-                       to=seq(from=-1000, to=0, by=10),
-                       N_SPECIES=0,
-                       N_SPECIES_BEGIN=0,
-                       N_SPECIES_END=0,
-                       N_SPECIATION=0,
-                       N_EXTINCTION=0,
-                       N_SPECIATION_EVENT=0)
-  
-  
-  event_df[from==-1100]$N_SPECIES<-1
-  
-  
-  j=-900
-  for (j in seq(from=-1000, to=0, by=10)){
-    from_y<-j-100
-    to_y<-j
-    #sub_df<-df[(year==j),]
-    subnodes<-nodes[between(from, from_y, to_y) | between(to, from_y, to_y) |
-                     (from_y>=from & from_y<=to) | (to_y>=from & to_y<=to)]
-    
-    N_SPECIES_BEGIN<-nrow(nodes[from_y>=from & from_y<=to])
-    N_SPECIES_END<-nrow(nodes[to_y>=from & to_y<=to])
-    
-    event_df[from==from_y]$N_SPECIES<-nrow(subnodes)
-    
-    subnodes<-nodes[between(to, from_y, to_y)]
-    
-    nodes_speciation<-subnodes[event=="SPECIATION"]
-    
-    N_SPECIATION<-nrow(nodes_speciation)
-    if (nrow(nodes_speciation)>0){
-      for (k in c(1:nrow(nodes_speciation))){
-        id<-nodes_speciation[k]$id
-        splabel<-nodes_speciation[k]$PX
-        sp<-edge_table[parent==id]
-        N_SPECIATION<-N_SPECIATION + nrow(sp)-2
-      }
-    }
-    
-    
-    
-    event_df[from==from_y]$N_SPECIES_BEGIN<-N_SPECIES_BEGIN
-    event_df[from==from_y]$N_SPECIES_END<-N_SPECIES_END
-    
-    event_df[from==from_y]$N_SPECIATION_EVENT<-nrow(nodes_speciation)
-    event_df[from==from_y]$N_SPECIATION<-N_SPECIATION
-    event_df[from==from_y]$N_EXTINCTION<-nrow(subnodes[event=="EXTINCTION"])
-    
-    
+  if (nrow(nodes[event=="EXTINCTION"])>10){
+    asdf
   }
-  event_df$N_SPECIES <- event_df$N_SPECIES - event_df$N_SPECIATION
-  saveRDS(event_df, ttt)
+  next()
+  #plot(vert.tree)
+  #nodelabels()
+  
+  # make tree binary and ultrametric
+  binultra <- multi2di(force.ultrametric(vert.tree, method = "extend"))
+  birthdeath(binultra)
+  fit.bd(binultra)
+  # assume a near complete tree, rho[1]=0.95
+  rho <- c(0.95,1)
+  
+  # set windows of 10k, starting 0, ending 120k
+  grid <- -10
+  start <- 1200
+  end <- 0
+  
+  # Vector of speciation times in the phylogeny. Time is measured 
+  # increasing going into the past with the present being time 0. 
+  # x can be obtained from a phylogenetic tree using getx(TREE).
+  x <- getx(binultra)
+  
+  # estimate time, lambda, mu
+  res <- bd.shifts.optim(x, rho, grid, start, end)[[2]]
+  #saveRDS(event_df, ttt)
 }
-event_df[N_SPECIATION!=N_SPECIATION_EVENT]
+

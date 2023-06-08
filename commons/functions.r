@@ -154,4 +154,50 @@ lm_model<-function(var, items, com){
   result[pr_t<0.001]$pr_t_label<-"***"
   result
 }
+
+
+lm_fun<-function(null_model, df_item, y, y_short, x, species_evo_type, directional_speed, V_L){
+  model<-glm(as.formula(sprintf("%s~%s", y, paste(x, collapse = "+"))),
+             data=df_item)
+  
+  cor<-cor(model$fitted.values, df_item[, get(y)])
+  if (is.null(null_model)){
+    null_model<-model
+  }
+  anova<-anova(null_model, model, test = "Chisq")
+  #Residual sum of squares:
+  RSS <- c(crossprod(model$residuals))
+  #Mean squared error:
+  MSE <- RSS / length(model$residuals)
+  #Root MSE:
+  RMSE <- sqrt(MSE)
+  #Pearson estimated residual variance
+  
+  sig2 <- RSS / model$df.residual
+  #calculate McFadden's R-squared for model
+  r2<-with(summary(model), 1 - deviance/null.deviance)
+  AIC<-model$aic
+  anova_p<-anova$`Pr(>Chi)`[2]
+  anova_p_label<-""
+  if (!is.na(anova_p)){
+    if (anova_p<=0.05){
+      anova_p_label<-"*"
+    }
+    if (anova_p<=0.01){
+      anova_p_label<-"**"
+    }
+    if (anova_p<=0.001){
+      anova_p_label<-"***"
+    }
+  }
+  evaluation<-data.table(x=paste(x, collapse = "+"), y=y, y_short=y_short,
+                         cor=cor, RSS=RSS, MSE=MSE, RMSE=RMSE,
+                         sig2=sig2, R2=r2, AIC=AIC, 
+                         anova_p=anova_p, anova_p_label=anova_p_label,
+                         species_evo_type=species_evo_type, 
+                         directional_speed=directional_speed, V_L=V_L)
+  result<-list(null_model=null_model, model=model, anova=anova, evaluation=evaluation)
+  result
+}
+
   

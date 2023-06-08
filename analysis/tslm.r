@@ -19,8 +19,7 @@ if (F){
   d[is.nan(R_SPECIATION_SPECIES)]$R_SPECIATION_SPECIES<-0
   d$R_EXTINCTION_SPECIES<-d$N_EXTINCTION/d$N_SPECIES * 1000
   d[is.nan(R_EXTINCTION_SPECIES)]$R_EXTINCTION_SPECIES<-0
-  #d$net_dr<-(d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)/1000
-  #d$SPECIES_PER_SPECIATION<-d$N_SPECIES/d$N_SPECIATION
+
   
   d$evo_type<-format_evoType(d$species_evo_type)
   d[, label:=format_evoLabel(evo_type, directional_speed), 
@@ -35,7 +34,7 @@ if (F){
   d_species_increasing_rate$species_increasing_rate<-
     (d_species_increasing_rate$N_SPECIES.y - d_species_increasing_rate$N_SPECIES.x)/
     d_species_increasing_rate$N_SPECIES.x
-  saveRDS(d, "../Data/tslm/d_ratio.rda")
+  saveRDS(d_species_increasing_rate, "../Data/tslm/d_ratio.rda")
   
   
   d_final<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
@@ -55,29 +54,30 @@ if (F){
   saveRDS(d_final, "../Data/tslm/d_N_Species_final.rda")
   
   
-  d_max<-readRDS("../Data/N_speciation_extinction/N_species_per_speciation.rda")
+  #d_max<-readRDS("../Data/N_speciation_extinction/N_species_per_speciation.rda")
   
-  d_max<-d_max[!is.infinite(SPECIES_PER_SPECIATION)]
-  d_max$evo_type<-format_evoType(d_max$species_evo_type)
-  d_max[, label:=format_evoLabel(evo_type, directional_speed), 
-        by=seq_len(nrow(d_max))]
-  hist(d_max$SPECIES_PER_SPECIATION)
-  d_max$N_SPECIATION<-NULL
-  d_ndr<-merge(d, d_max, by=c("species_evo_type", "directional_speed", "nb", "da", "global_id", "evo_type", "label"))
+  #d_max<-d_max[!is.infinite(SPECIES_PER_SPECIATION)]
+  #d_max$evo_type<-format_evoType(d_max$species_evo_type)
+  #d_max[, label:=format_evoLabel(evo_type, directional_speed), 
+  #      by=seq_len(nrow(d_max))]
+  #hist(d_max$SPECIES_PER_SPECIATION)
+  #d_max$N_SPECIATION<-NULL
+  #d_ndr<-merge(d, d_max, by=c("species_evo_type", "directional_speed", "nb", "da", "global_id", "evo_type", "label"))
   #d_ndr$net_dr<-d_ndr$R_SPECIATION_SPECIES * d_ndr$SPECIES_PER_SPECIATION - d_ndr$R_EXTINCTION_SPECIES
-  d_ndr$net_dr<-d_ndr$N_SPECIATION * d_ndr$SPECIES_PER_SPECIATION - d_ndr$N_EXTINCTION
+  #d_ndr$net_dr<-d_ndr$N_SPECIATION * d_ndr$SPECIES_PER_SPECIATION - d_ndr$N_EXTINCTION
   
-  d_ndr$net_dr_erin<-d_ndr$R_SPECIATION_SPECIES - d_ndr$R_EXTINCTION_SPECIES
+  #d_ndr$net_dr_erin<-d_ndr$R_SPECIATION_SPECIES - d_ndr$R_EXTINCTION_SPECIES
   
-  cor(d_ndr$net_dr, d_ndr$N_SPECIATION)
-  cor(d_ndr$net_dr, d_ndr$N_EXTINCTION)
-  sample_i<-sample(nrow(d_ndr), 1e4)
+  #cor(d_ndr$net_dr, d_ndr$N_SPECIATION)
+  #cor(d_ndr$net_dr, d_ndr$N_EXTINCTION)
+  #sample_i<-sample(nrow(d_ndr), 1e4)
   
-  plot(d_ndr[sample_i]$N_SPECIATION, d_ndr[sample_i]$N_EXTINCTION)
-  plot(d_ndr[sample_i]$N_SPECIATION, d_ndr[sample_i]$net_dr)
+  #plot(d_ndr[sample_i]$N_SPECIATION, d_ndr[sample_i]$N_EXTINCTION)
+  #plot(d_ndr[sample_i]$N_SPECIATION, d_ndr[sample_i]$net_dr)
   
-  plot(d_ndr[sample_i]$R_SPECIATION_SPECIES, d_ndr[sample_i]$R_EXTINCTION_SPECIES)
-  
+  #plot(d_ndr[sample_i]$R_SPECIATION_SPECIES, d_ndr[sample_i]$R_EXTINCTION_SPECIES)
+  d_ndr<-d_species_increasing_rate
+  d_ndr$net_dr<-d_ndr$species_increasing_rate
   saveRDS(d_ndr, "../Data/tslm/d_ndr.rda")
 
   
@@ -89,22 +89,29 @@ if (F){
   cor(d_ndr$N_SPECIES, d_ndr$N_SPECIATION)
   
   df_N_SPECIES<-TukeyHSD_B("N_SPECIES", d)
-  df_N_SPECIES_FINAL<-TukeyHSD_B("N_SPECIES_FINAL", d_final)
-  df_species_increasing_rate<-TukeyHSD_B("species_increasing_rate", d_species_increasing_rate)
-  df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", d)
-  df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", d)
-  df_SPECIES_PER_SPECIATION<-TukeyHSD_B("SPECIES_PER_SPECIATION", d_max)
-  df_net_dr<-TukeyHSD_B("net_dr", d_ndr)
-  df_net_dr_erin<-TukeyHSD_B("net_dr_erin", d_ndr)
+  #df_N_SPECIES_FINAL<-TukeyHSD_B("N_SPECIES_FINAL", d_final)
   
-  df_result<-rbindlist(list(df_net_dr, df_net_dr_erin, df_N_SPECIES, df_N_SPECIES_FINAL,
+  ggplot(d_species_increasing_rate)+
+    geom_boxplot(aes(x=from, y=species_increasing_rate, color=label))
+  
+  item<-d_ndr[!is.nan(species_increasing_rate)]
+  df_species_increasing_rate<-TukeyHSD_B("species_increasing_rate", 
+                                         item)
+  df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", item)
+  df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", item)
+  df_SPECIES_PER_SPECIATION<-TukeyHSD_B("SPECIES_PER_SPECIATION", 
+                                        item)
+  df_net_dr<-TukeyHSD_B("net_dr", item)
+  #df_net_dr_erin<-TukeyHSD_B("net_dr_erin", d_ndr)
+  
+  df_result<-rbindlist(list(df_net_dr, df_N_SPECIES,
                             df_species_increasing_rate,
                             df_R_SPECIATION_SPECIES, df_R_EXTINCTION_SPECIES,
                             df_SPECIES_PER_SPECIATION))
   saveRDS(df_result, "../Figures/TukeyHSD/TukeyHSD_by_species.rda")
   write.csv(df_result, "../Figures/TukeyHSD/TukeyHSD_by_species.csv", row.names = F)
   
-  df_result<-rbindlist(list(df_net_dr, 
+  df_result<-rbindlist(list(df_net_dr, df_SPECIES_PER_SPECIATION,
                             df_R_SPECIATION_SPECIES, df_R_EXTINCTION_SPECIES))
   
   df_result$alternative<-""
