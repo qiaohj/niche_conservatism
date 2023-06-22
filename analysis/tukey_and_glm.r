@@ -26,7 +26,7 @@ if (F){
   labels<-unique(d$label)
   
   
-  d_final<-readRDS("../Data/tslm/d_N_Species_final.rda")
+  d_final<-readRDS("../Data/20230616/tslm/d_N_Species_final.rda")
   
   d[N_SPECIES_BEGIN==0]
   
@@ -37,7 +37,7 @@ if (F){
   cor(d$net_dr, d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)
   
   saveRDS(d, "../Data/tslm_and_glm/d_ndr.rda")
-  
+  d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
   d_null<-d[species_evo_type==1]
   d_null<-d_null[, c("from", "to", "nb", "da", "global_id")]
   d_null$tag<-1
@@ -46,40 +46,80 @@ if (F){
   ggplot(d)+geom_histogram(aes(y=net_dr))+facet_wrap(~label)
   cor(d$N_SPECIES, d$net_dr)
   cor(d$N_SPECIES, d$N_SPECIATION)
-  item<-d[from>=-900]
-  df_N_SPECIES<-TukeyHSD_B("N_SPECIES", item)
-  df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", item)
-  df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", item)
-  df_net_dr<-TukeyHSD_B("net_dr", item)
-  df_net_dr_2<-TukeyHSD_B("net_dr_2", item)
-  df_result<-rbindlist(list(df_net_dr, df_N_SPECIES,
-                            df_R_SPECIATION_SPECIES, 
-                            df_R_EXTINCTION_SPECIES))
-  df_result$diff_str<-round(df_result$diff, 3)
-  saveRDS(df_result, "../Figures/TukeyHSD/TukeyHSD_by_species.rda")
-  write.csv(df_result, "../Figures/TukeyHSD/TukeyHSD_by_species.csv", row.names = F)
+  coms<-data.table(expand.grid(nb=c(NA, "BROAD", "NARROW"), da=c(NA, "GOOD", "POOR")))
+  i=1
+  df_result_list<-list()
+  for (i in c(1:nrow(coms))){
+    com<-coms[i]
+    print(i)
+    item<-d[from>=-1000]
+    if (!is.na(com$nb)){
+      item<-item[nb==com$nb]
+    }
+    if (!is.na(com$da)){
+      item<-item[da==com$da]
+    }
+    
+    
+    df_N_SPECIES<-TukeyHSD_B("N_SPECIES", item)
+    df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", item)
+    df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", item)
+    df_net_dr<-TukeyHSD_B("net_dr", item)
+    df_net_dr_2<-TukeyHSD_B("net_dr_2", item)
+    df_result<-rbindlist(list(df_net_dr, df_N_SPECIES,
+                              df_R_SPECIATION_SPECIES, 
+                              df_R_EXTINCTION_SPECIES))
+    df_result$diff_str<-round(df_result$diff, 3)
+    df_result$NB<-com$nb
+    df_result$DA<-com$da
+    df_result_list[[length(df_result_list)+1]]<-df_result
+    
+  }
+  df_result_list<-rbindlist(df_result_list)
+  saveRDS(df_result_list, "../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")
+  write.csv(df_result_list, "../Figures/20230616/TukeyHSD/TukeyHSD_by_species.csv", row.names = F)
 }
 if (F){
-  df_result<-readRDS("../Figures/TukeyHSD/TukeyHSD_by_species.rda")
-  
-  df_result$diff_str<-round(df_result$diff, 3)
-  df_result$alternative<-""
-  df_result[diff>0]$alternative<-"greater"
-  df_result[diff<0]$alternative<-"less"
-  df_result[p_label==""]$alternative<-"no sig dif"
-  table(df_result$alternative)
-  df_result$label<-gsub("-conservatism", "", df_result$label)
-  df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
-  p<-ggplot(df_result[!grepl("0.01", label)])+
-    geom_tile(aes(x=type, y=label, fill=alternative))+
-    geom_text(aes(x=type, y=label, label=diff_label))+
-    scale_fill_manual(values=c("#D55E00", "#0072B2", "white"),
-                      breaks=c("greater", "less", "no sig dif"))
-  #scale_x_discrete(guide = guide_axis(n.dodge = 2))
-  p
-  
-  
-  ggsave(p, filename="../Figures/TukeyHSD/TukeyHSD.png", width=10, height=6)
+  coms<-data.table(expand.grid(nb=c(NA, "BROAD", "NARROW"), da=c(NA, "GOOD", "POOR")))
+  i=1
+  df_result_list<-readRDS("../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")
+  for (i in c(1:nrow(coms))){
+    com<-coms[i]
+    print(i)
+    item<-d[from>=-1000]
+    df_result<-df_result_list
+    if (is.na(com$nb)){
+      df_result<-df_result_list[is.na(NB)]
+    }else{
+      df_result<-df_result_list[NB==com$nb]
+    }
+    if (is.na(com$da)){
+      df_result<-df_result[is.na(DA)]
+    }else{
+      df_result<-df_result[DA==com$da]
+    }
+    df_result<-df_result[type!="N_SPECIES"]
+    df_result$diff_str<-round(df_result$diff, 3)
+    df_result$alternative<-""
+    df_result[diff>0]$alternative<-"greater"
+    df_result[diff<0]$alternative<-"less"
+    df_result[p_label==""]$alternative<-"no sig dif"
+    table(df_result$alternative)
+    df_result$label<-gsub("-conservatism", "", df_result$label)
+    df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
+    p<-ggplot(df_result[!grepl("0.01", label)])+
+      geom_tile(aes(x=type, y=label, fill=alternative))+
+      geom_text(aes(x=type, y=label, label=diff_label))+
+      ggtitle(sprintf("%s_%s", com$nb, com$da))+
+      scale_fill_manual(values=c("#D55E00", "#0072B2", "white"),
+                        breaks=c("greater", "less", "no sig dif"))
+    #scale_x_discrete(guide = guide_axis(n.dodge = 2))
+    p
+    
+    
+    ggsave(p, filename=sprintf("../Figures/20230616/TukeyHSD/TukeyHSD_%s_%s.png", com$nb, com$da),
+           width=10, height=6)
+  }
 }
 if (F){
   df_nb_trait<-readRDS("../Data/niche_traits/niche_traits_fn_without_outlier_with_next_year.rda")
@@ -208,7 +248,7 @@ v<-vars[1]
 y<-"net_dr_diff"
 
 i=2
-df_item<-model_data
+
 x<-"1"
 coms<-d_ratio_traits_ndr_with_env[, .(N=.N), by=list(species_evo_type, directional_speed, V_L)]
 

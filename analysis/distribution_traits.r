@@ -137,8 +137,11 @@ for (i in c(1:nrow(all_df))){
   #ttt2<-sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Results_1/%s/%s.DISTRIBUTION.rda", sp, sp)
   
   if (file.exists(ttt2)){
+    print("skip")
+    next()
     size<-file.size(ttt2)
     if (size>100){
+      
       #print(sprintf("rm -rf %s", ttt))
       next()
     }
@@ -202,6 +205,7 @@ for (i in c(1:nrow(all_df))){
   
   df_with_lon_lat<-merge(df, mask, by="global_id")
   distribution_df<-df_with_lon_lat[, .(N_CELLS=.N,
+                                       N_GROUP=length(unique(group_id)),
                           MAX_LON=max(lon),
                           MEAN_LON=mean(lon),
                           MIN_LON=min(lon),

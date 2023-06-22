@@ -37,7 +37,7 @@ dbDisconnect(mydb)
 i=1
 
 nb<-"BROAD"
-da<-"GOOD"
+da<-"POOR"
 species_evo_level<-0
 
 if (species_evo_level==0){

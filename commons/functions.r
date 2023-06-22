@@ -1,10 +1,3 @@
-bind<-function(df1, df2){
-  if (is.null(df1)){
-    df2
-  }else{
-    rbindlist(list(df1, df2))
-  }
-}
 
 #1: conservatism
 #2: shift-directional
@@ -21,6 +14,14 @@ evo_types<-c("conservatism",
              "random-symmetrical",
              "random-asymmetrical",
              "unknown")
+evo_type_color <- c('conservatism'='#BBBBBB', 
+                'shift-directional'='#228833', 
+                'random-central'='#AA3377', 
+                'random-symmetrical'='#EE6677', 
+                'random-asymmetrical'='#CCBB44',
+                'random-directional'='#4477AA',  
+                'random-omnidirectional'='#66CCEE')
+
 evo_type_amp<-data.frame(type=c("conservatism",
              "shift-directional", "shift-directional", "shift-directional",
              "expansion-directional", "expansion-directional", "expansion-directional",
