@@ -37,6 +37,7 @@ if (F){
   cor(d$net_dr, d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)
   
   saveRDS(d, "../Data/tslm_and_glm/d_ndr.rda")
+  
   d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
   d_null<-d[species_evo_type==1]
   d_null<-d_null[, c("from", "to", "nb", "da", "global_id")]

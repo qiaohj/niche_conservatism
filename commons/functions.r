@@ -14,6 +14,41 @@ evo_types<-c("conservatism",
              "random-symmetrical",
              "random-asymmetrical",
              "unknown")
+
+evo_types_label_item<-c("Conservatism",
+                        "Directional",
+                        "Directional",
+                        "Omnidirectional",
+                        "Shift",
+                        "Change",
+                        "Change and shift")
+
+evo_types_label_x<-c("Conservatism & No change", 
+                     "Directional 0.1 & Shift", 
+                     "Directional 0.5 & Shift",
+                     "Central & Random", 
+                     "Symmetrical & Random", 
+                     "Asymmetrical & Random",
+                     "Directional 0.1 & Expansion", 
+                     " Directional 0.5 & Expansion",
+                     "Omnidirectional 0.1 & Expansion", 
+                     "Omnidirectional 0.5 & Expansion")
+
+evo_types_label_group<-c("No change",
+                         "Niche shift",
+                         "Niche expansion",
+                         "Niche expansion",
+                         "Random change",
+                         "Random change",
+                         "Random change")
+evo_types_label_color<-c("Niche Conservatism",
+                         "Directional niche shift",
+                         "Directional niche expansion",
+                         "Omnidirectional niche expansion",
+                         "Random niche shift",
+                         "Random niche expansion/reduction",
+                         "Random niche change and shift")
+
 evo_type_color <- c('conservatism'='#BBBBBB', 
                 'shift-directional'='#228833', 
                 'random-central'='#AA3377', 
@@ -21,6 +56,17 @@ evo_type_color <- c('conservatism'='#BBBBBB',
                 'random-asymmetrical'='#CCBB44',
                 'random-directional'='#4477AA',  
                 'random-omnidirectional'='#66CCEE')
+evo_type_color <- c('#444444', 
+                    '#228833', 
+                    '#AA3377', 
+                    '#EE6677', 
+                    '#CCBB44',
+                    '#4477AA',  
+                    '#66CCEE')
+
+crs_asia<-"+proj=laea +lat_0=30 +lon_0=90 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+crs_america<-"+proj=laea +lat_0=30 +lon_0=-90 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
+
 
 evo_type_amp<-data.frame(type=c("conservatism",
              "shift-directional", "shift-directional", "shift-directional",
@@ -201,4 +247,109 @@ lm_fun<-function(null_model, df_item, y, y_short, x, species_evo_type, direction
   result
 }
 
+create_fig<-function(item_y, label, barwidth=10, with_label=T, legend_label=""){
+  threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
+  #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
+  threshold<-7000
+  max_n_sp<-max(item_y$N_SPECIES)
+  min_n_sp<-min(item_y$N_SPECIES)
+  if (threshold>max_n_sp){
+    midpoint<-round(max_n_sp/2)
+    breakss<-c(min_n_sp, midpoint, max_n_sp)
+    labelss<-c("0", "", as.character(max_n_sp))
+  }else{
+    midpoint<-round(threshold/2)
+    breakss<-c(min_n_sp, midpoint, threshold)
+    labelss<-c("0", "", sprintf(">%d, up to %d", threshold, max_n_sp))
+  }
   
+  
+  item_y[N_SPECIES>threshold]$N_SPECIES<-threshold
+  item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
+  
+  p_asia<-ggplot(item_y, aes(colour=N_SPECIES)) +
+    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
+    geom_sf()+
+    scale_color_gradient2(low  = "#4477AA", high="#EE6677",
+                          mid = "#DDDDDD", midpoint=midpoint,
+                          breaks=breakss, 
+                          labels=labelss)+
+    
+    #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
+    coord_sf(crs = st_crs(crs_asia))+
+    labs(colour=legend_label)+
+    xlim(-12e6, 12e6)+
+    ylim(-12e6, 12e6)+
+    theme(panel.grid.major = element_line(color = "#d4d4d4", 
+                                          linetype = "dashed", linewidth = 0.5), 
+          panel.background = element_rect(fill = "#FFFFFF"),
+          axis.title = element_blank(),
+          legend.position = "bottom")+
+    guides(color = guide_colourbar(barwidth = barwidth, barheight = NULL,
+                                   title.position = "left", title.hjust = 1)) 
+  #legend<-get_legend(p_asia)
+  #p_asia<-p_asia+theme(legend.position = "none")
+  
+  p_america<-ggplot(item_y, aes(colour=N_SPECIES)) +
+    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
+    geom_sf()+
+    scale_color_gradient2(low  = "#4477AA", high="#EE6677",
+                          mid = "#DDDDDD", midpoint=midpoint,
+                          breaks=breakss, 
+                          labels=labelss)+
+    
+    #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
+    coord_sf(crs = st_crs(crs_america))+
+    labs(colour=legend_label)+
+    xlim(-12e6, 12e6)+
+    ylim(-12e6, 12e6)+
+    theme(panel.grid.major = element_line(color = "#d4d4d4", 
+                                          linetype = "dashed", linewidth = 0.5), 
+          panel.background = element_rect(fill = "#FFFFFF"),
+          axis.title = element_blank(),
+          legend.position = "bottom")+
+    guides(color = guide_colourbar(barwidth = barwidth, barheight = NULL,
+                                   title.position = "left", title.hjust = 1)) 
+  
+  p<-ggarrange(p_asia, p_america, common.legend = TRUE, legend="bottom")
+  if (with_label){
+    p<-annotate_figure(p, top = sprintf("%s", label))
+  }
+  return(p)
+}
+
+formatLabels<-function(d_item){
+  d_item$evo_type<-format_evoType(d_item$species_evo_type)
+  d_item$evo_types_label_item<-evo_types_label_item[d_item$species_evo_type]
+  d_item$evo_types_label_color<-evo_types_label_color[d_item$species_evo_type]
+  d_item$evo_types_label_group<-evo_types_label_group[d_item$species_evo_type]
+  d_item$evo_type_color<-evo_type_color[d_item$species_evo_type]
+  d_item$evo_speed<-""
+  d_item[directional_speed %in% c(0.1, 0.5)]$evo_speed<-
+    as.character(d_item[directional_speed %in% c(0.1, 0.5)]$directional_speed)
+  d_item$evo_types_label_item_label<-d_item$evo_types_label_item
+  d_item[directional_speed %in% c(0.1, 0.5)]$evo_types_label_item_label<-
+    sprintf("%s (%s)", d_item[directional_speed %in% c(0.1, 0.5)]$evo_types_label_item, 
+            d_item[directional_speed %in% c(0.1, 0.5)]$evo_speed)
+  d_item$evo_line_type<-"0.5*"
+  d_item[directional_speed %in% c(0.1)]$evo_line_type<-"0.1"
+  d_item[, label:=format_evoLabel(evo_type, directional_speed), 
+             by=seq_len(nrow(d_item))]
+  
+  d_item<-formatLabelX(d_item)
+  d_item
+}
+formatLabelX<-function(d_item){
+  d_item$label_x<-evo_types_label_x[1]
+  d_item[label=="shift-directional (0.1)"]$label_x<-evo_types_label_x[2]
+  d_item[label=="shift-directional (0.5)"]$label_x<-evo_types_label_x[3]
+  d_item[label=="random-central"]$label_x<-evo_types_label_x[4]
+  d_item[label=="random-symmetrical"]$label_x<-evo_types_label_x[5]
+  d_item[label=="random-asymmetrical"]$label_x<-evo_types_label_x[6]
+  d_item[label=="expansion-directional (0.1)"]$label_x<-evo_types_label_x[7]
+  d_item[label=="expansion-directional (0.5)"]$label_x<-evo_types_label_x[8]
+  d_item[label=="expansion-omnidirectional (0.1)"]$label_x<-evo_types_label_x[9]
+  d_item[label=="expansion-omnidirectional (0.5)"]$label_x<-evo_types_label_x[10]
+  d_item$label_x<-factor(d_item$label_x, levels=evo_types_label_x)
+  d_item
+}
