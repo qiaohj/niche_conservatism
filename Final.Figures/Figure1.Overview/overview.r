@@ -19,6 +19,63 @@ library(heatmaply)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
+if (F){
+  #Stat
+  df<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
+  df<-df[year==0]
+  df<-df[((directional_speed %in% c(0) & species_evo_type==1) |
+            (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
+            (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7))) & 
+           species_evo_level==0]
+  nrow(df)
+  nrow(df[N_SPECIES>0])
+  
+  outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
+  global_ids<-unique(outliers$global_id)
+  
+  df[global_id %in% global_ids]
+  
+  df_left<-df[!(global_id %in% global_ids)]
+  sum(df_left$N_SPECIES)
+  table(df_left$species_evo_type)
+  
+  d_se2<-df[, .(MEAN_N_SPECIES=mean(N_SPECIES),
+                          SD_N_SPECIES=sd(N_SPECIES),
+                          MIN_N_SPECIES=min(N_SPECIES),
+                          MAX_N_SPECIES=max(N_SPECIES),
+                          IQR_N_SPECIES=IQR(N_SPECIES),
+                          MEDIAN_N_SPECIES=quantile(N_SPECIES, 0.5),
+                          QUANTILE_25_NCELL=quantile(N_SPECIES, 0.25),
+                          QUANTILE_75_NCELL=quantile(N_SPECIES, 0.75)),
+                      by=list(year, species_evo_type, directional_speed, species_evo_level, nb, da)]
+  
+  d_se2$Threshold_IQR<-d_se2$QUANTILE_75_NCELL + d_se2$IQR_N_SPECIES * 1.5
+  d_se2$Threshold_3SD<-d_se2$MEAN_N_SPECIES + d_se2$SD_N_SPECIES * 3
+  df$IS_3SD_OUTLIERS<-
+    df$N_SPECIES>df$Threshold_3SD
+  
+  outliers<-d_se2[(nb=="BROAD") & (species_evo_type %in% c(1:4)) & 
+                    (directional_speed %in% c(0, 0.1, 0.5))]
+  outliers<-df_last_year_with_threshold[IS_3SD_OUTLIERS==T &
+                                          (nb=="BROAD") & (species_evo_type %in% c(1:4)) & 
+                                          (directional_speed %in% c(0, 0.1, 0.5))]
+  sum(df$N_ALL_SPECIES)
+  sum(df$N_SPECIES)
+  
+  runtime<-readRDS("../Data/runtimes.rda")
+  
+  x<-runtime[(global_id %in% global_ids) & (nb=="BROAD") & (species_evo_type %in% c(1:4)) & 
+            (directional_speed %in% c(0, 0.1, 0.5))]
+  x[hours==max(x$hours)]
+  
+  
+  ncell<-readRDS("../Data/distribution_traits/distribution_traits_se_without_3SD_outliers.rda")
+  ncell<-formatLabels(ncell)
+  ncell_last<-ncell[year==0]
+  ggplot(ncell)+geom_point(aes(x=year, y=N_CELLS, color=evo_types_label_item_label))
+  mean(ncell_last[species_evo_type==1]$N_CELLS)
+  CI(ncell_last[species_evo_type==1]$N_CELLS)
+}
 polygon<-readRDS("../Figures/Figure1.Overview/Data/polygon.rda")
 
 world <- ne_countries(scale = "small", returnclass = "sf")
@@ -31,13 +88,21 @@ v_prcp_mean<-env_df[var=="Debiased_Maximum_Monthly_Precipitation"]
 p <- ggplot(v_tmax_mean, aes(x = year * -0.1))+
   geom_line(aes(y = mean_v), colour = wc_col[2])+
   #geom_line(data=v_tmin_mean, aes(y = mean_v), colour = wc_col[1])+
-  geom_line(data=v_prcp_mean, aes(y = mean_v * 8 - 35), colour = "black")+
+  geom_line(data=v_prcp_mean, aes(y = mean_v * 8 - 35), colour = "#4477AA")+
   scale_y_continuous(sec.axis = sec_axis(~(.+35)/8, name = "Precipitation (mm/day)"))+
   labs(y = "Maximum Temperature (degree)",
        x = "K years before present")+
   xlim(-120, 0)+
   theme_bw()+
-  theme(legend.position = c(0.8, 0.9))
+  theme(legend.position = c(0.8, 0.9),
+        axis.title.y = element_text(colour = "#EE6677"),
+        axis.line.y = element_line(color = "#EE6677"), 
+        axis.ticks.y = element_line(color = "#EE6677"),
+        axis.text.y = element_text(colour = "#EE6677"),
+        axis.title.y.right = element_text(colour = "#4477AA"),
+        axis.line.y.right = element_line(color = "#4477AA"), 
+        axis.ticks.y.right = element_line(color = "#4477AA"),
+        axis.text.y.right = element_text(colour = "#4477AA"))
 
 p
 ggsave(p, filename="../Figures/Figure1.Overview/env_change.pdf", width=12, height=4)
@@ -255,6 +320,8 @@ p_seeds2<-ggplot(polygon_tmax) +
         axis.title = element_blank(),
         legend.position = "none")
 p_seeds<-ggarrange(p_seeds1, p_seeds2, nrow=1)
+p_seeds<-annotate_figure(p_seeds, top = "seed cells")
+
 ggsave(p_seeds, filename="../Figures/Figure1.Overview/seeds.pdf", width=12, height=6, bg="white")
 ggsave(p_seeds, filename="../Figures/Figure1.Overview/seeds.png", width=12, height=6, bg="white")
 
@@ -271,7 +338,7 @@ diversity_final[group=="conservatism" & medium_N_SPECIES==max(diversity_final[gr
 diversity_final$N_SPECIES<-round(diversity_final$mean_N_SPECIES)
 #diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
-p.richness<-create_fig(diversity_final[group=="conservatism"], "conservatism", 
+p.richness<-create_fig(diversity_final[group=="conservatism"], "Niche conservatism", 
                        with_label=T, legend_label="species numbers")
 ggsave(p.richness, filename="../Figures/Figure1.Overview/species.richness.niche.conservatism.png",
        width=6, height=6, bg="white")
@@ -300,24 +367,32 @@ all_dt<-rbindlist(list(birds_st, mammals_st, n_splist_df), use.names = T, fill=T
 setorderv(all_dt, "lat_band")
 
 n_splist_df_ratio_lat<-all_dt[, .(mean_N_SPECIES=mean(mean_N_SPECIES),
-                                  mean_N_SPECIES_scaled=mean(mean_N_SPECIES_scaled)),
+                                  mean_N_SPECIES_scaled=mean(mean_N_SPECIES_scaled),
+                                  sd_mean_N_SPECIES_scaled=sd(mean_N_SPECIES_scaled),
+                                  CI_mean_N_SPECIES_scaled=my_CI(mean_N_SPECIES_scaled)),
                                          by=list(lat_band, group)]
 p_lat_band<-ggplot(n_splist_df_ratio_lat)+
   
   #geom_point(aes(x=N_Species, y=mid, color=label))+
+  geom_ribbon(aes(xmin=mean_N_SPECIES_scaled-CI_mean_N_SPECIES_scaled,
+                  xmax=mean_N_SPECIES_scaled+CI_mean_N_SPECIES_scaled, 
+                  y=lat_band, fill=group), alpha=0.2)+
+  
   geom_path(aes(x=mean_N_SPECIES_scaled, y=lat_band, color=group), position="identity")+
   #geom_errorbarh(aes(xmin=N_Species-N_Species_SD, xmax=N_Species+N_Species_SD, y=mid))+
   theme_bw()+
-  labs(x="Number of species", y="Latitudinal band", color="Evolution ratio",
-       fill="Evolution ratio")+
+  labs(x="Scaled species diversity", y="Latitudinal band", color="",
+       fill="")+
   #scale_color_manual(values=c("black", colorBlindGrey8[2:4]))+
   #scale_x_continuous(breaks=c(500, 1000, 1500, 2000), labels=c(500, 1000, 1500, 2000))+
   xlim(0.08, 0.75)+
   ylim(-50, 70)+
   scale_color_manual(values=c("#228833", "#EE6677", "#4477AA"), 
                      breaks = c("birds", "mammals", "conservatism"))+
+  scale_fill_manual(values=c("#228833", "#EE6677", "#4477AA"), 
+                     breaks = c("birds", "mammals", "conservatism"))+
   theme(legend.position = c(0.7, 0.7),
-        axis.title.x = element_blank(),
+        #axis.title.x = element_blank(),
         plot.margin = unit(c(0.01, 0, 0, 0.01), "null"))
 
 p_seeds2_part<-ggplot(polygon_tmax) +

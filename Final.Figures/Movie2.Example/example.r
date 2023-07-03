@@ -173,5 +173,5 @@ for file in * ; do
 mv ./"$file" "y-$file"
 done
 
-cd /media/huijieqiao/Butterfly/Niche_Conservatism/Figures/Example/all_scenarios
+cd /media/huijieqiao/Butterfly/Niche_Conservatism/Figures/Movie2.Example/all_scenarios
 ffmpeg -r 5 -start_number -1198 -i y%d.png -y ../27464_all_scenarios.mp4

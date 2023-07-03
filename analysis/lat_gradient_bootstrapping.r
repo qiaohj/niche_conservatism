@@ -108,3 +108,4 @@ n_splist_df_se<-n_splist_df[, .(N_Species=mean(N_Species),
                             by=list(year, species_evo_type, directional_speed, species_evo_level,
                                     from, to, mid, is_outlier)]
 saveRDS(n_splist_df_se, "../Data/lat_gradient_bootstrapping_se.rda")
+n_splist_df_se<-readRDS("./Data/lat_gradient/lat_gradient_bootstrapping_se.rda")

@@ -64,6 +64,7 @@ evo_type_color <- c('#444444',
                     '#4477AA',  
                     '#66CCEE')
 
+
 crs_asia<-"+proj=laea +lat_0=30 +lon_0=90 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
 crs_america<-"+proj=laea +lat_0=30 +lon_0=-90 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
 
@@ -109,11 +110,6 @@ format_evoType_amplitude<-function(evoType, amplitude, order=1){
   evo_type<-factor(evo_type, levels=evo_type_amps)
 }
 
-safe_colorblind_palette <- c("#88CCEE", "#CC6677", "#DDCC77", "#117733", "#332288", "#AA4499", 
-                             "#44AA99", "#999933", "#882255", "#661100", "#6699CC", "#888888")
-                             
-colorBlindGrey8   <- c("#999999", "#E69F00", "#56B4E9", "#009E73", 
-                                "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 bg<-"#f6f6f6"
 
@@ -247,7 +243,11 @@ lm_fun<-function(null_model, df_item, y, y_short, x, species_evo_type, direction
   result
 }
 
-create_fig<-function(item_y, label, barwidth=10, with_label=T, legend_label=""){
+create_fig<-function(item_y, label="", barwidth=10, with_label=T, 
+                     legend_label="", polygon=NULL){
+  if (is.null(polygon)){
+    polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
+  }
   threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
   #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
   threshold<-7000
@@ -317,7 +317,10 @@ create_fig<-function(item_y, label, barwidth=10, with_label=T, legend_label=""){
   }
   return(p)
 }
-
+my_CI<-function(v, ci=0.95){
+  cis<-CI(v, ci=ci)
+  cis[2] - cis[3]
+}
 formatLabels<-function(d_item){
   d_item$evo_type<-format_evoType(d_item$species_evo_type)
   d_item$evo_types_label_item<-evo_types_label_item[d_item$species_evo_type]

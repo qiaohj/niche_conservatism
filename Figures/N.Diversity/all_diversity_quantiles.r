@@ -58,68 +58,6 @@ get_quantile(item_y$N_SPECIES, min(item_y$N_SPECIES))
 get_quantile(item_y$N_SPECIES, median(item_y$N_SPECIES))
 hist(get_quantile(item_y$N_SPECIES, item_y$N_SPECIES))
 
-create_fig<-function(item_y, label, barwidth=10, legend_position="none"){
-  
-  item_y$color_v<-get_quantile(item_y$N_SPECIES, item_y$N_SPECIES)
-  midpoint<-50
-  breakss<-c(min(item_y$color_v), 50, max(item_y$color_v))
-  labelss<-c("low", "", "high")
-  
-  
-  item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
-  
-  p_asia<-ggplot(item_y, aes(colour=color_v)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-    geom_sf()+
-    scale_color_gradient(low  = "#d4d4d4", high="#B40426",
-                         #mid = "#FFFFFF", midpoint=midpoint,
-                         breaks=breakss, 
-                         labels=labelss)+
-    
-    #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
-    coord_sf(crs = st_crs(crs_asia))+
-    labs(colour="Species richness")+
-    xlim(-12e6, 12e6)+
-    ylim(-12e6, 12e6)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
-          panel.background = element_rect(fill = "#FFFFFF"),
-          axis.title = element_blank(),
-          legend.position = legend_position)+
-    guides(color = guide_colourbar(barwidth = barwidth, barheight = NULL,
-                                   title.position = "left", title.hjust = 1)) 
-  #legend<-get_legend(p_asia)
-  #p_asia<-p_asia+theme(legend.position = "none")
-  
-  p_america<-ggplot(item_y, aes(colour=color_v)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-    geom_sf()+
-    scale_color_gradient(low  = "#d4d4d4", high="#B40426",
-                          #mid = "#FFFFFF", midpoint=midpoint,
-                          breaks=breakss, 
-                          labels=labelss)+
-    
-    #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
-    coord_sf(crs = st_crs(crs_america))+
-    labs(colour="Species richness")+
-    xlim(-12e6, 12e6)+
-    ylim(-12e6, 12e6)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
-          panel.background = element_rect(fill = "#FFFFFF"),
-          axis.title = element_blank(),
-          legend.position = legend_position)+
-    guides(color = guide_colourbar(barwidth = barwidth, barheight = NULL,
-                                   title.position = "left", title.hjust = 1)) 
-  if (legend_position=="none"){
-    p<-ggarrange(p_asia, p_america, common.legend = TRUE, legend=legend_position)
-  }else{
-    p<-ggarrange(p_asia, p_america, common.legend = TRUE, legend=legend_position)  
-  }
-  
-  
-  p<-annotate_figure(p, top = sprintf("%s", label))
-  return(p)
-}
-
 
 
 p1<-create_fig(diversity_final[group=="conservatism"], "conservatism", legend_position="bottom")

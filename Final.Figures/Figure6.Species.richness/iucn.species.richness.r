@@ -20,7 +20,7 @@ library(heatmaply)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 setDTthreads(20)
 #source("commons/diverging_map.r")
-polygon<-readRDS("../Figures/Example/polygon.rda")
+polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
 world <- ne_countries(scale = "small", returnclass = "sf")
 
 
@@ -43,7 +43,7 @@ diversity_final$N_SPECIES<-diversity_final$richness
 p1<-create_fig(diversity_final, "Bird")
 hist(diversity_final$N_SPECIES)
 p1
-ggsave(p1, filename="../Figures/Diversity/Diversity.bird.png", bg="white", width=8, height=4)
+ggsave(p1, filename="../Figures/Figure6.Species.Richness/species.richness.bird.png", bg="white", width=8, height=4)
 
 diversity_final<-read_sf("../Shape/IUCN_Richness/Mammals/richness.shp")
 diversity_final$geometry<-NULL
@@ -56,6 +56,6 @@ diversity_final$N_SPECIES<-diversity_final$richness
 #diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
 p2<-create_fig(diversity_final, "Mammal")
-ggsave(p2, filename="../Figures/Diversity/Diversity.mammal.png", bg="white", width=8, height=4)
+ggsave(p2, filename="../Figures/Figure6.Species.Richness/species.richness.mammal.png", bg="white", width=8, height=4)
 p<-ggarrange(p1, p2, nrow=2, ncol=1)
-ggsave(p, filename="../Figures/Diversity/Diversity.iucn.png", bg="white", width=8, height=8)
+ggsave(p, filename="../Figures/Figure6.Species.Richness/species.richness.iucn.png", bg="white", width=8, height=8)

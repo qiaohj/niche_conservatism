@@ -21,7 +21,7 @@ library(data.table)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 setDTthreads(20)
 #source("commons/diverging_map.r")
-polygon<-readRDS("../Figures/Example/polygon.rda")
+polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
 #diversity<-readRDS("../Data/diversity.rda")
 nb<-"BROAD"
 da<-"GOOD"
@@ -48,7 +48,9 @@ if (F){
   simulations<-data.table(simulations)
   simulations<-simulations[is_run==1]
   combinations<-simulations[, .(N=.N), by=list(nb, da, species_evo_type, directional_speed)]
-  
+  combinations<-combinations[((directional_speed %in% c(0) & species_evo_type==1) |
+                                (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
+                                (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7)))]
   
   bootstrap_seeds_all<-readRDS("../Data/diversity/bootstrap_seeds.rda")
   template<-"%d_%s_%s_%d_%s_%d"
@@ -57,69 +59,85 @@ if (F){
   base<-"/media/huijieqiao/QNAS/Niche_Conservatism/Results"
   
   rrrr<-51
+  
   for (rrrr in c(1:100)){
-    target<-sprintf("../Data/diversity_boostrap_items_full_year/%d.rda", rrrr)
-    if (file.exists(target)){
+    target<-sprintf("../Data/diversity_boostrap_items_full_year/r_%d", rrrr)
+    if (dir.exists(target)){
       next()
     }
-    saveRDS(NULL, target)
-    bootstrap_seeds<-bootstrap_seeds_all[rep==rrrr]
+    dir.create(target)
     
-    dddd<-list()
+    bootstrap_seeds<-bootstrap_seeds_all[rep==rrrr]
+    d_year<-list()
+    for (y in c(0:1198)){
+      d_year[[as.character(y)]]<-list()
+    }
     for (i in c(1:nrow(bootstrap_seeds))){
       seed<-bootstrap_seeds[i]
       
       for (j in c(1:nrow(combinations))){
         
         com<-combinations[j]
-        print(paste(rrrr, i, nrow(bootstrap_seeds), j, nrow(combinations),
+        print(paste("rep", rrrr, i, nrow(bootstrap_seeds), j, nrow(combinations),
                     seed$global_id, com$da, com$nb, com$species_evo_type, 
                     com$directional_speed))
         sp<-sprintf(template, seed$global_id, com$da, com$nb, com$species_evo_type, 
                     com$directional_speed, 0)
         ttt<-sprintf("%s/%s/%s.diversity.rda", base, sp, sp)
-        df_item<-readRDS(ttt)
-        if (is.null(df_item)){
-          next()
-        }
-        df_item<-df_item[year==0]
+        df_full<-readRDS(ttt)
         
-        if (nrow(df_item)==0){
+        if (is.null(df_full)){
           next()
         }
-        df_item$seed_id<-seed$global_id
-        df_item$da<-com$da
-        df_item$nb<-com$nb
-        df_item$species_evo_type<-com$species_evo_type
-        df_item$directional_speed<-com$directional_speed 
-        dddd[[length(dddd)+1]]<-df_item
+        years<-unique(df_full$year)
+        for (y in years){
+          df_item<-df_full[year==y]
+          if (nrow(df_item)==0){
+            next()
+          }
+          
+          #range(df_item$year)
+          df_item$seed_id<-seed$global_id
+          df_item$da<-com$da
+          df_item$nb<-com$nb
+          df_item$species_evo_type<-com$species_evo_type
+          df_item$directional_speed<-com$directional_speed 
+          d_year[[as.character(y)]][[length(d_year[[as.character(y)]])+1]]<-df_item
+        }
+        
       }
       
     }
-    dddd<-rbindlist(dddd)
-    diversity_se<-dddd[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
-                       by=list(year, global_id, 
-                               species_evo_type, directional_speed)]
-    diversity_se$rep<-rrrr
-    saveRDS(diversity_se, target)
-    diversity_se_nb<-dddd[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
-                          by=list(year, global_id, 
-                                  species_evo_type, directional_speed, nb)]
-    diversity_se_nb$rep<-rrrr
-    saveRDS(diversity_se_nb, sprintf("../Data/diversity_boostrap_items_full_year/%d_nb.rda", rrrr))
-    diversity_se_nb_da<-dddd[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
-                             by=list(year, global_id, 
-                                     species_evo_type, directional_speed, nb, da)]
-    
-    diversity_se_nb_da$rep<-rrrr
-    saveRDS(diversity_se_nb_da, sprintf("../Data/diversity_boostrap_items_full_year/%d_nb_da.rda", rrrr))
-    
+    for (y in c(0:1198)){
+      print(paste("Saving ", y))
+      dddd<-d_year[[as.character(y)]]
+      
+      dddd<-rbindlist(dddd)
+      diversity_se<-dddd[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
+                         by=list(year, global_id, 
+                                 species_evo_type, directional_speed)]
+      diversity_se$rep<-rrrr
+      saveRDS(diversity_se, sprintf("%s/y%d_r%d.rda", target, y, rrrr))
+      diversity_se_nb<-dddd[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
+                            by=list(year, global_id, 
+                                    species_evo_type, directional_speed, nb)]
+      diversity_se_nb$rep<-rrrr
+      saveRDS(diversity_se_nb, sprintf("%s/y%d_r%d_nb.rda", target, y, rrrr))
+      diversity_se_nb_da<-dddd[, .(N_SPECIES=sum(N_SPECIES), N_INDIVIDUAL=sum(N_INDIVIDUAL)),
+                               by=list(year, global_id, 
+                                       species_evo_type, directional_speed, nb, da)]
+      
+      diversity_se_nb_da$rep<-rrrr
+      saveRDS(diversity_se_nb_da, sprintf("%s/y%d_r%d_nb_da.rda", target, y, rrrr))
+    }
   }
+  
 }
 if (F){
   dddd<-list()
   dddd_nb<-list()
   dddd_nb_da<-list()
+  i=1
   for (i in c(1:100)){
     print(i)
     target<-sprintf("../Data/diversity_boostrap_items_full_year/%d.rda", i)
@@ -137,7 +155,7 @@ if (F){
   dddd<-rbindlist(dddd)
   dddd_se<-dddd[, .(mean_N_SPECIES=mean(N_SPECIES), medium_N_SPECIES=quantile(N_SPECIES, 0.5),
                     sd_N_SPECIES=sd(N_SPECIES)),
-                by=list(global_id, species_evo_type, directional_speed)]
+                by=list(global_id, species_evo_type, directional_speed, year)]
   dddd_se$group<-"random"
   dddd_se[species_evo_type==1]$group<-"conservatism"
   dddd_se[species_evo_type==2]$group<-"shift-directional"
@@ -148,7 +166,7 @@ if (F){
   dddd_nb<-rbindlist(dddd_nb)
   dddd_nb_se<-dddd_nb[, .(mean_N_SPECIES=mean(N_SPECIES), medium_N_SPECIES=quantile(N_SPECIES, 0.5),
                           sd_N_SPECIES=sd(N_SPECIES)),
-                      by=list(global_id, species_evo_type, directional_speed, nb)]
+                      by=list(global_id, species_evo_type, directional_speed, nb, year)]
   dddd_nb_se$group<-"random"
   dddd_nb_se[species_evo_type==1]$group<-"conservatism"
   dddd_nb_se[species_evo_type==2]$group<-"shift-directional"
@@ -159,7 +177,7 @@ if (F){
   dddd_nb_da<-rbindlist(dddd_nb_da)
   dddd_nb_da_se<-dddd_nb_da[, .(mean_N_SPECIES=mean(N_SPECIES), medium_N_SPECIES=quantile(N_SPECIES, 0.5),
                                 sd_N_SPECIES=sd(N_SPECIES)),
-                            by=list(global_id, species_evo_type, directional_speed, nb, da)]
+                            by=list(global_id, species_evo_type, directional_speed, nb, da, year)]
   dddd_nb_da_se$group<-"random"
   dddd_nb_da_se[species_evo_type==1]$group<-"conservatism"
   dddd_nb_da_se[species_evo_type==2]$group<-"shift-directional"
@@ -168,81 +186,10 @@ if (F){
   saveRDS(dddd_nb_da_se, "../Data/diversity/diversity_bootstrap_nb_da_full.rda")
   
 }
-item_y<-diversity_final[group=="conservatism"]
-label<-"conservatism"
-create_fig<-function(item_y, label, barwidth=10){
-  threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
-  #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
-  threshold<-7000
-  max_n_sp<-max(item_y$N_SPECIES)
-  min_n_sp<-min(item_y$N_SPECIES)
-  if (threshold>max_n_sp){
-    midpoint<-round(max_n_sp/2)
-    breakss<-c(min_n_sp, midpoint, max_n_sp)
-    labelss<-c("0", "", as.character(max_n_sp))
-  }else{
-    midpoint<-round(threshold/2)
-    breakss<-c(min_n_sp, midpoint, threshold)
-    labelss<-c("0", "", sprintf(">%d, up to %d", threshold, max_n_sp))
-  }
-  
-  
-  item_y[N_SPECIES>threshold]$N_SPECIES<-threshold
-  item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
-  
-  p_asia<-ggplot(item_y, aes(colour=N_SPECIES)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-    geom_sf()+
-    scale_color_gradient2(low  = "#3B4CC0", high="#B40426",
-                          mid = "#DDDDDD", midpoint=midpoint,
-                          breaks=breakss, 
-                          labels=labelss)+
-    
-    #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
-    coord_sf(crs = st_crs(crs_asia))+
-    labs(colour="")+
-    xlim(-12e6, 12e6)+
-    ylim(-12e6, 12e6)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", 
-                                          linetype = "dashed", linewidth = 0.5), 
-          panel.background = element_rect(fill = "#FFFFFF"),
-          axis.title = element_blank(),
-          legend.position = "bottom")+
-    guides(color = guide_colourbar(barwidth = barwidth, barheight = NULL,
-                                   title.position = "left", title.hjust = 1)) 
-  #legend<-get_legend(p_asia)
-  #p_asia<-p_asia+theme(legend.position = "none")
-  
-  p_america<-ggplot(item_y, aes(colour=N_SPECIES)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-    geom_sf()+
-    scale_color_gradient2(low  = "#3B4CC0", high="#B40426",
-                          mid = "#DDDDDD", midpoint=midpoint,
-                          breaks=breakss, 
-                          labels=labelss)+
-    
-    #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
-    coord_sf(crs = st_crs(crs_america))+
-    labs(colour="")+
-    xlim(-12e6, 12e6)+
-    ylim(-12e6, 12e6)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", 
-                                          linetype = "dashed", linewidth = 0.5), 
-          panel.background = element_rect(fill = "#FFFFFF"),
-          axis.title = element_blank(),
-          legend.position = "bottom")+
-    guides(color = guide_colourbar(barwidth = barwidth, barheight = NULL,
-                                   title.position = "left", title.hjust = 1)) 
-  
-  p<-ggarrange(p_asia, p_america, common.legend = TRUE,legend="bottom")
-  
-  p<-annotate_figure(p, top = sprintf("%s", label))
-  return(p)
-}
+source("commons/functions.r")
 
 
-
-diversity_final<-readRDS("../Data/diversity/diversity_bootstrap.rda")
+diversity_final<-readRDS("../Data/diversity/diversity_bootstrap_full.rda")
 ll<-readRDS("../Data/mask_lonlat.rda")
 diversity_final<-merge(diversity_final, ll, by="global_id", all=T)
 diversity_final[is.na(mean_N_SPECIES)]$mean_N_SPECIES<-0
@@ -253,11 +200,12 @@ diversity_final[group=="conservatism" & medium_N_SPECIES==max(diversity_final[gr
 diversity_final$N_SPECIES<-round(diversity_final$mean_N_SPECIES)
 #diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
-p1<-create_fig(diversity_final[group=="conservatism"], "conservatism")
+p1<-create_fig(diversity_final[group=="conservatism" & year==1200], label="Niche conservatism", 
+               barwidth=10, with_label=T, legend_label="", polygon)
 
 ggsave(p1, filename="../Figures/Diversity/Diversity.conservatism_bootstrap_mean.png", bg="white", width=8, height=4)
-p2_1<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.01], 
-                 "shift-directional (0.01)")
+#p2_1<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.01], 
+#                 "shift-directional (0.01)")
 p2_2<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.1], 
                  "shift-directional (0.1)")
 p2_3<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.5], 

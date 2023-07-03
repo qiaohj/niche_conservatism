@@ -100,7 +100,7 @@ for (i in c(1:nrow(coms))){
   }
   df_result<-df_result[type!="N_SPECIES"]
   unique(df_result$type)
-  type.labs <- c("net_dr"= "Net per capita diversification rate",
+  type.labs <- c("net_dr"= "net per capita diversification rate",
                 "R_EXTINCTION_SPECIES"=  "net per capita extinction",
                 "R_SPECIATION_SPECIES" ="net per capita speciation")
   

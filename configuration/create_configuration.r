@@ -51,7 +51,8 @@ if (F){
 }
 nb_range<-list("BROAD"=c(60, 10),
                "NARROW"=c(40, 5))
-
+#-23.648161649704,36.351838350296|-23.648161649704,36.351838350296|1.96372151374817,11.9637215137482
+#-13.648161649704,26.351838350296|-13.648161649704,26.351838350296|4.46372151374817,9.46372151374817
 simulations<-simulations[which(simulations$evo_type==1),]
 simulations<-simulations[which(simulations$nb!="MODERATE"),]
 simulations$id<-1
