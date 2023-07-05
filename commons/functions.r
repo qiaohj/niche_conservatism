@@ -1,4 +1,5 @@
-
+library(Rmisc)
+x_label<-"K years before present"
 #1: conservatism
 #2: shift-directional
 #3: expansion-directional
@@ -24,15 +25,27 @@ evo_types_label_item<-c("Conservatism",
                         "Change and shift")
 
 evo_types_label_x<-c("Conservatism & No change", 
-                     "Directional 0.1 & Shift", 
-                     "Directional 0.5 & Shift",
+                     "Directional 10% & Shift", 
+                     "Directional 50% & Shift",
                      "Central & Random", 
                      "Symmetrical & Random", 
                      "Asymmetrical & Random",
-                     "Directional 0.1 & Expansion", 
-                     " Directional 0.5 & Expansion",
-                     "Omnidirectional 0.1 & Expansion", 
-                     "Omnidirectional 0.5 & Expansion")
+                     "Directional 10% & Expansion", 
+                     " Directional 50% & Expansion",
+                     "Omnidirectional 10% & Expansion", 
+                     "Omnidirectional 50% & Expansion")
+
+evo_types_label_line<-c("Niche Conservatism",
+                        "Directional niche shift (10%)",
+                        "Directional niche shift (50%)",
+                        "Random niche shift",
+                        "Random niche expansion/reduction",
+                        "Random niche change and shift",
+                        "Directional niche expansion (10%)",
+                        "Directional niche expansion (50%)",
+                        "Omnidirectional niche expansion (10%)",
+                        "Omnidirectional niche expansion (50%)"
+                        )
 
 evo_types_label_group<-c("No change",
                          "Niche shift",
@@ -49,20 +62,35 @@ evo_types_label_color<-c("Niche Conservatism",
                          "Random niche expansion/reduction",
                          "Random niche change and shift")
 
-evo_type_color <- c('conservatism'='#BBBBBB', 
-                'shift-directional'='#228833', 
-                'random-central'='#AA3377', 
-                'random-symmetrical'='#EE6677', 
-                'random-asymmetrical'='#CCBB44',
-                'random-directional'='#4477AA',  
-                'random-omnidirectional'='#66CCEE')
-evo_type_color <- c('#444444', 
-                    '#228833', 
-                    '#AA3377', 
-                    '#EE6677', 
-                    '#CCBB44',
-                    '#4477AA',  
-                    '#66CCEE')
+evo_type_color <- c('Niche Conservatism'='#000000', 
+                'Directional niche shift (10%)'='#228833', 
+                'Directional niche shift (50%)'='#228833', 
+                'Random niche shift'='#AA3377', 
+                'Random niche expansion/reduction'='#EE6677', 
+                'Random niche change and shift'='#CCBB44',
+                'Directional niche expansion (10%)'='#4477AA', 
+                'Directional niche expansion (50%)'='#4477AA', 
+                'Omnidirectional niche expansion (10%)'='#66CCEE',
+                'Omnidirectional niche expansion (50%)'='#66CCEE')
+
+evo_type_line <- c('Niche Conservatism'=1, 
+                    'Directional niche shift (10%)'=1, 
+                    'Directional niche shift (50%)'=2, 
+                    'Random niche shift'=1, 
+                    'Random niche expansion/reduction'=1, 
+                    'Random niche change and shift'=1,
+                    'Directional niche expansion (10%)'=1, 
+                    'Directional niche expansion (50%)'=2, 
+                    'Omnidirectional niche expansion (10%)'=1,
+                    'Omnidirectional niche expansion (50%)'=2)
+
+#evo_type_color <- c('#444444', 
+#                    '#228833', 
+#                    '#AA3377', 
+#                    '#EE6677', 
+#                    '#CCBB44',
+#                    '#4477AA',  
+#                    '#66CCEE')
 
 
 crs_asia<-"+proj=laea +lat_0=30 +lon_0=90 +x_0=0 +y_0=0 +ellps=GRS80 +units=m +no_defs"
@@ -334,12 +362,13 @@ formatLabels<-function(d_item){
   d_item[directional_speed %in% c(0.1, 0.5)]$evo_types_label_item_label<-
     sprintf("%s (%s)", d_item[directional_speed %in% c(0.1, 0.5)]$evo_types_label_item, 
             d_item[directional_speed %in% c(0.1, 0.5)]$evo_speed)
-  d_item$evo_line_type<-"0.5*"
-  d_item[directional_speed %in% c(0.1)]$evo_line_type<-"0.1"
+  d_item$evo_line_type<-"no change, random or 50%"
+  d_item[directional_speed %in% c(0.1)]$evo_line_type<-"10%"
   d_item[, label:=format_evoLabel(evo_type, directional_speed), 
              by=seq_len(nrow(d_item))]
   
   d_item<-formatLabelX(d_item)
+  d_item<-formatLabel_line(d_item)
   d_item
 }
 formatLabelX<-function(d_item){
@@ -354,5 +383,20 @@ formatLabelX<-function(d_item){
   d_item[label=="expansion-omnidirectional (0.1)"]$label_x<-evo_types_label_x[9]
   d_item[label=="expansion-omnidirectional (0.5)"]$label_x<-evo_types_label_x[10]
   d_item$label_x<-factor(d_item$label_x, levels=evo_types_label_x)
+  d_item
+}
+
+formatLabel_line<-function(d_item){
+  d_item$label_line<-evo_types_label_line[1]
+  d_item[label=="shift-directional (0.1)"]$label_line<-evo_types_label_line[2]
+  d_item[label=="shift-directional (0.5)"]$label_line<-evo_types_label_line[3]
+  d_item[label=="random-central"]$label_line<-evo_types_label_line[4]
+  d_item[label=="random-symmetrical"]$label_line<-evo_types_label_line[5]
+  d_item[label=="random-asymmetrical"]$label_line<-evo_types_label_line[6]
+  d_item[label=="expansion-directional (0.1)"]$label_line<-evo_types_label_line[7]
+  d_item[label=="expansion-directional (0.5)"]$label_line<-evo_types_label_line[8]
+  d_item[label=="expansion-omnidirectional (0.1)"]$label_line<-evo_types_label_line[9]
+  d_item[label=="expansion-omnidirectional (0.5)"]$label_line<-evo_types_label_line[10]
+  d_item$label_line<-factor(d_item$label_line, levels=evo_types_label_line)
   d_item
 }

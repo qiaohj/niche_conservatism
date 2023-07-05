@@ -109,6 +109,7 @@ if (F){
       
     }
     for (y in c(0:1198)){
+      setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
       print(paste("Saving ", y))
       dddd<-d_year[[as.character(y)]]
       

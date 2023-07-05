@@ -8,7 +8,7 @@ source("commons/functions.r")
 d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
 d<-d[floor((d$to+0)/100)==(d$to+0)/100]
 coms<-data.table(expand.grid(nb=c(NA, "NB"), da=c(NA, "DA")))
-i=2
+i=1
 var="N_GROUP"
 for (i in c(1:nrow(coms))){
   com<-coms[i]
@@ -53,41 +53,37 @@ for (i in c(1:nrow(coms))){
   
   d_se<-formatLabels(d_se)
   p1<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_SPECIATION_SPECIES, 
-                                 color=evo_types_label_color, 
-                                 linetype=evo_line_type,
-                                 group=label))+
-    scale_color_manual(values=evo_type_color, breaks=evo_types_label_color)+
-    scale_linetype_manual(values=c(1, 2),
-                          breaks=c("0.5*", "0.1"))+
-    labs(x="K years before present", y="Number of speciestion per 1k species",
-         color="Evolution type", linetype="Change percentage")+
+                                 color=label_line, 
+                                 linetype=label_line))+
+    scale_color_manual("Evolution scenario", values=evo_type_color)+
+    scale_linetype_manual("Evolution scenario", 
+                          values=evo_type_line)+
+    labs(x=x_label, y="Number of speciestions per 1K species")+
     theme_bw()+
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank())
   
-  
+  p1
   p2<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_EXTINCTION_SPECIES, 
-                                 color=evo_types_label_color, 
-                                 linetype=evo_line_type,
-                                 group=label))+
-    scale_color_manual(values=evo_type_color, breaks=evo_types_label_color)+
-    scale_linetype_manual(values=c(1, 2),
-                          breaks=c("0.5*", "0.1"))+
-    labs(x="K years before present", y="Number of extinction per 1k species",
-         color="Evolution type", linetype="Change percentage")+
+                                 color=label_line, 
+                                 linetype=label_line))+
+    scale_color_manual("Evolution scenario", values=evo_type_color)+
+    scale_linetype_manual("Evolution scenario", values=evo_type_line)+
+    labs(x=x_label, y="Number of extinctions per 1K species")+
     theme_bw()+
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank())
+  p2
   p3<-ggplot(d_se)+geom_line(aes(x=to/10, y=net_dr, 
-                                 color=evo_types_label_color, 
-                                 linetype=evo_line_type,
+                                 color=label_line, 
+                                 linetype=label_line,
                                  group=label))+
-    scale_color_manual(values=evo_type_color, breaks=evo_types_label_color)+
-    scale_linetype_manual(values=c(1, 2),
-                          breaks=c("0.5*", "0.1"))+
-    labs(x="K years before present", y="Net per capita diversification rate",
-         color="Evolution type", linetype="Change percentage")+
+    scale_color_manual("Evolution scenario", values=evo_type_color)+
+    scale_linetype_manual("Evolution scenario", values=evo_type_line)+
+    labs(x=x_label, y="Net per capita diversification rate",
+         linetype="", color="Evolution scenario")+
     theme_bw()
+  p3
   width<-10
   height<-9
   if (is.na(com$nb) & !is.na(com$da)){
@@ -117,5 +113,6 @@ for (i in c(1:nrow(coms))){
   ggsave(p, filename=sprintf("../Figures/Figure2.DR.SR.ER.by.year/fixed.window.Figure2.DR.SR.ER.by.year.%s.%s.png", com$nb, com$da), 
          width=width, height=height, bg = "white")
   
-  
+  ggsave(p, filename=sprintf("../Figures/Figure2.DR.SR.ER.by.year/fixed.window.Figure2.DR.SR.ER.by.year.%s.%s.pdf", com$nb, com$da), 
+         width=width, height=height, bg = "white")
 }

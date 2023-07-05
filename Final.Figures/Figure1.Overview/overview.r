@@ -16,6 +16,7 @@ library(ggtree)
 library(phylobase)
 library(ggpubr)
 library(heatmaply)
+library(Rmisc)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
@@ -36,7 +37,15 @@ if (F){
   df[global_id %in% global_ids]
   
   df_left<-df[!(global_id %in% global_ids)]
+  
+  sum(df$N_ALL_SPECIES)
+  sum(df$N_SPECIES)
+  
+  sum(df_left$N_ALL_SPECIES)
+  sum(df_left$N_SPECIATION)
+  sum(df_left$N_EXTINCTION)
   sum(df_left$N_SPECIES)
+  
   table(df_left$species_evo_type)
   
   d_se2<-df[, .(MEAN_N_SPECIES=mean(N_SPECIES),
@@ -59,8 +68,7 @@ if (F){
   outliers<-df_last_year_with_threshold[IS_3SD_OUTLIERS==T &
                                           (nb=="BROAD") & (species_evo_type %in% c(1:4)) & 
                                           (directional_speed %in% c(0, 0.1, 0.5))]
-  sum(df$N_ALL_SPECIES)
-  sum(df$N_SPECIES)
+  
   
   runtime<-readRDS("../Data/runtimes.rda")
   
@@ -68,13 +76,60 @@ if (F){
             (directional_speed %in% c(0, 0.1, 0.5))]
   x[hours==max(x$hours)]
   
+  if (F){
+    ncell<-readRDS("../Data/distribution_traits/distribution_traits_without_3SD_outliers.rda")
+    #ncell<-formatLabels(ncell)
+    ncell_last<-ncell[year==0]
+    saveRDS(ncell_last, "../Data/distribution_traits/distribution_traits_without_3SD_outliers_last_year.rda")
+  }
+  ncell_last<-readRDS("../Data/distribution_traits/distribution_traits_without_3SD_outliers_last_year.rda")
+  ncell_last<-ncell_last[((directional_speed %in% c(0) & species_evo_type==1) |
+      (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
+      (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7))) & 
+      species_evo_level==0]
+  #ggplot(ncell)+geom_point(aes(x=year, y=N_CELLS, color=evo_types_label_item_label))
+  #mean(ncell_last[species_evo_type==1]$N_CELLS)
+  #CI(ncell_last[species_evo_type==1]$N_CELLS)
+  #quantile(ncell_last[species_evo_type==1]$N_CELLS, c(0.25, 0.5, 0.75))
+  csv<-ncell_last[,.(min=min(N_CELLS),
+                q25=quantile(N_CELLS, 0.25),
+                q50=quantile(N_CELLS, 0.50),
+                mean=mean(N_CELLS),
+                sd=sd(N_CELLS),
+                ci=my_CI(N_CELLS),
+                q75=quantile(N_CELLS, 0.75),
+                max=max(N_CELLS)),
+             by=list(species_evo_type, directional_speed)]
+  csv$evo_type<-format_evoType(csv$species_evo_type)
+  write.csv(csv, "../Data/distribution_traits/ncell.csv", row.names = F)
+  birds<-readRDS("/media/huijieqiao/Butterfly/Niche_Conservatism/Data/IUCN_NB/Birds.rda")
+  birds$evo_type<-"Birds"
+  birds_se<-birds[,.(min=min(n_cell),
+             q25=quantile(n_cell, 0.25),
+             q50=quantile(n_cell, 0.50),
+             mean=mean(n_cell),
+             sd=sd(n_cell),
+             ci=my_CI(n_cell),
+             q75=quantile(n_cell, 0.75),
+             max=max(n_cell),
+           directional_speed=0),
+          by=list(evo_type)]
   
-  ncell<-readRDS("../Data/distribution_traits/distribution_traits_se_without_3SD_outliers.rda")
-  ncell<-formatLabels(ncell)
-  ncell_last<-ncell[year==0]
-  ggplot(ncell)+geom_point(aes(x=year, y=N_CELLS, color=evo_types_label_item_label))
-  mean(ncell_last[species_evo_type==1]$N_CELLS)
-  CI(ncell_last[species_evo_type==1]$N_CELLS)
+  mammals<-readRDS("/media/huijieqiao/Butterfly/Niche_Conservatism/Data/IUCN_NB/Mammals.rda")
+  mammals$evo_type<-"Mammals"
+  mammals_se<-mammals[,.(min=min(n_cell),
+                q25=quantile(n_cell, 0.25),
+                q50=quantile(n_cell, 0.50),
+                mean=mean(n_cell),
+                sd=sd(n_cell),
+                ci=my_CI(n_cell),
+                q75=quantile(n_cell, 0.75),
+                max=max(n_cell),
+                directional_speed=0),
+             by=list(evo_type)]
+  csv<-rbindlist(list(csv, birds_se, mammals_se), fill=T, use.names = T)
+  csv$species_evo_type<-NULL
+  write.csv(csv, "../Figures/Figure1.Overview/Data/ncell.csv", row.names = F)
 }
 polygon<-readRDS("../Figures/Figure1.Overview/Data/polygon.rda")
 

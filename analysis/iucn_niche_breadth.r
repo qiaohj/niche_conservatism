@@ -36,12 +36,13 @@ for (i in c(1:length(species))){
   }
   index<-st_intersects(item, polygon)
   index<-unique(unlist(index))
-  global_ids<-polygon[index,]$global_id
+  global_ids<-unique(polygon[index,]$global_id)
   if (length(global_ids)>0){
     range_tmin<-range(v_tmin_last[global_id %in% global_ids]$v)
     range_tmax<-range(v_tmax_last[global_id %in% global_ids]$v)
     range_prcp<-range(v_prcp_last[global_id %in% global_ids]$v)
     item_df<-data.table(species=sp, 
+                        n_cell=length(global_ids),
                         tmin_min=range_tmin[1], tmin_max=range_tmin[2],
                         tmax_min=range_tmax[1], tmax_max=range_tmax[2],
                         prcp_min=range_prcp[1], prcp_max=range_prcp[2]
@@ -67,12 +68,13 @@ for (i in c(1:length(species))){
   item<-mammals[which(mammals$binomial ==sp),]
   index<-st_intersects(item, polygon)
   index<-unique(unlist(index))
-  global_ids<-polygon[index,]$global_id
+  global_ids<-unique(polygon[index,]$global_id)
   if (length(global_ids)>0){
     range_tmin<-range(v_tmin_last[global_id %in% global_ids]$v)
     range_tmax<-range(v_tmax_last[global_id %in% global_ids]$v)
     range_prcp<-range(v_prcp_last[global_id %in% global_ids]$v)
     item_df<-data.table(species=sp, 
+                        n_cell=length(global_ids),
                         tmin_min=range_tmin[1], tmin_max=range_tmin[2],
                         tmax_min=range_tmax[1], tmax_max=range_tmax[2],
                         prcp_min=range_prcp[1], prcp_max=range_prcp[2]
