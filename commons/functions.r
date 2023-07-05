@@ -1,5 +1,6 @@
 library(Rmisc)
-x_label<-"K years before present"
+x_label<-"Years before present (kyr)"
+change_rate<-"change rate"
 #1: conservatism
 #2: shift-directional
 #3: expansion-directional
@@ -22,7 +23,9 @@ evo_types_label_item<-c("Conservatism",
                         "Omnidirectional",
                         "Shift",
                         "Change",
-                        "Change and shift")
+                        "Change and shift",
+                        "Birds",
+                        "Mammals")
 
 evo_types_label_x<-c("Conservatism & No change", 
                      "Directional 10% & Shift", 
@@ -53,14 +56,18 @@ evo_types_label_group<-c("No change",
                          "Niche expansion",
                          "Random change",
                          "Random change",
-                         "Random change")
+                         "Random change",
+                         "IUCN",
+                         "IUCN")
 evo_types_label_color<-c("Niche Conservatism",
                          "Directional niche shift",
                          "Directional niche expansion",
                          "Omnidirectional niche expansion",
                          "Random niche shift",
                          "Random niche expansion/reduction",
-                         "Random niche change and shift")
+                         "Random niche change and shift",
+                         "Birds",
+                         "Mammals")
 
 evo_type_color <- c('Niche Conservatism'='#000000', 
                 'Directional niche shift (10%)'='#228833', 
@@ -72,6 +79,17 @@ evo_type_color <- c('Niche Conservatism'='#000000',
                 'Directional niche expansion (50%)'='#4477AA', 
                 'Omnidirectional niche expansion (10%)'='#66CCEE',
                 'Omnidirectional niche expansion (50%)'='#66CCEE')
+
+evo_type_color2 <- c('Niche Conservatism'='#000000', 
+                    'Directional niche shift'='#228833', 
+                    'Random niche shift'='#AA3377', 
+                    'Random niche expansion/reduction'='#EE6677', 
+                    'Random niche change and shift'='#CCBB44',
+                    'Directional niche expansion'='#4477AA', 
+                    'Omnidirectional niche expansion'='#66CCEE',
+                    'Birds'='#DC050C',
+                    'Mammals'='#CAE0AB')
+
 
 evo_type_line <- c('Niche Conservatism'=1, 
                     'Directional niche shift (10%)'=1, 
@@ -346,7 +364,7 @@ create_fig<-function(item_y, label="", barwidth=10, with_label=T,
   return(p)
 }
 my_CI<-function(v, ci=0.95){
-  cis<-CI(v, ci=ci)
+  cis<-Rmisc::CI(v, ci=ci)
   cis[2] - cis[3]
 }
 formatLabels<-function(d_item){
@@ -356,8 +374,8 @@ formatLabels<-function(d_item){
   d_item$evo_types_label_group<-evo_types_label_group[d_item$species_evo_type]
   d_item$evo_type_color<-evo_type_color[d_item$species_evo_type]
   d_item$evo_speed<-""
-  d_item[directional_speed %in% c(0.1, 0.5)]$evo_speed<-
-    as.character(d_item[directional_speed %in% c(0.1, 0.5)]$directional_speed)
+  d_item[directional_speed %in% c(0.1, 0.5)]$evo_speed<-sprintf("%s%s",
+    as.character(d_item[directional_speed %in% c(0.1, 0.5)]$directional_speed * 100), "%")
   d_item$evo_types_label_item_label<-d_item$evo_types_label_item
   d_item[directional_speed %in% c(0.1, 0.5)]$evo_types_label_item_label<-
     sprintf("%s (%s)", d_item[directional_speed %in% c(0.1, 0.5)]$evo_types_label_item, 
@@ -383,6 +401,7 @@ formatLabelX<-function(d_item){
   d_item[label=="expansion-omnidirectional (0.1)"]$label_x<-evo_types_label_x[9]
   d_item[label=="expansion-omnidirectional (0.5)"]$label_x<-evo_types_label_x[10]
   d_item$label_x<-factor(d_item$label_x, levels=evo_types_label_x)
+  
   d_item
 }
 
@@ -399,4 +418,8 @@ formatLabel_line<-function(d_item){
   d_item[label=="expansion-omnidirectional (0.5)"]$label_line<-evo_types_label_line[10]
   d_item$label_line<-factor(d_item$label_line, levels=evo_types_label_line)
   d_item
+}
+
+format_digits <- function(x, digits=3) {
+  formatC(x, format = "f", digits = digits)
 }

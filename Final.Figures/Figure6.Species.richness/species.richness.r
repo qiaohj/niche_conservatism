@@ -11,7 +11,7 @@ library(phangorn)
 library(phytools)
 library(geiger)
 library(stringr)
-library(plotKML)
+#library(plotKML)
 library(ggtree)
 library(phylobase)
 library(ggpubr)
@@ -48,37 +48,37 @@ diversity_final[group=="conservatism" & medium_N_SPECIES==max(diversity_final[gr
 diversity_final$N_SPECIES<-round(diversity_final$mean_N_SPECIES)
 #diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
-p1<-create_fig(diversity_final[group=="conservatism"], "Niche conservatism", polygon=polygon, 
+p1<-create_fig(diversity_final[group=="conservatism"], evo_types_label_line[1], polygon=polygon, 
                legend_label = "species number")
 p1
 ggsave(p1, filename="../Figures/Figure6.Species.Richness/richness.conservatism.png", 
        bg="white", width=8, height=4)
 
 p2_2<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.1], 
-                 "shift-directional (0.1)", polygon=polygon)
+                 evo_types_label_line[2], polygon=polygon)
 p2_3<-create_fig(diversity_final[group=="shift-directional" & directional_speed==0.5], 
-                 "shift-directional (0.5)", polygon=polygon)
+                 evo_types_label_line[3], polygon=polygon)
 
 
 p3_2<-create_fig(diversity_final[group=="expansion-directional" & directional_speed==0.1], 
-                 "expansion-directional (0.1)", polygon=polygon)
+                 evo_types_label_line[7], polygon=polygon)
 p3_3<-create_fig(diversity_final[group=="expansion-directional" & directional_speed==0.5], 
-                 "expansion-directional (0.5)", polygon=polygon)
+                 evo_types_label_line[8], polygon=polygon)
 
 
 p4_2<-create_fig(diversity_final[group=="expansion-omnidirectional" & directional_speed==0.1], 
-                 "expansion-omnidirectional (0.1)", polygon=polygon)
+                 evo_types_label_line[9], polygon=polygon)
 p4_3<-create_fig(diversity_final[group=="expansion-omnidirectional" & directional_speed==0.5], 
-                 "expansion-omnidirectional (0.5)", polygon=polygon)
+                 evo_types_label_line[10], polygon=polygon)
 #5: random-central
 #6: random-symmetrical
 #7: random-asymmetrical
 p5_1<-create_fig(diversity_final[group=="random" & species_evo_type==5], 
-                 "random-central", polygon=polygon)
+                 evo_types_label_line[4], polygon=polygon)
 p5_2<-create_fig(diversity_final[group=="random" & species_evo_type==6],
-                 "random-symmetrical", polygon=polygon)
+                 evo_types_label_line[5], polygon=polygon)
 p5_3<-create_fig(diversity_final[group=="random" & species_evo_type==7],
-                 "random-asymmetrical", polygon=polygon)
+                 evo_types_label_line[6], polygon=polygon)
 
 p2<-ggarrange(plotlist=list(p2_2, p3_2, p4_2), nrow=1)
 p3<-ggarrange(plotlist=list(p2_3, p3_3, p4_3), nrow=1)
@@ -88,4 +88,5 @@ pp<-ggarrange(plotlist=list(p1, p2, p3, p5), nrow=4, heights = c(2, 1,1,1))
 ggsave(pp, filename="../Figures/Figure6.Species.Richness/Species.richness.full.png", 
        width=12, height=12, bg="white")
 
-
+ggsave(pp, filename="../Figures/Figure6.Species.Richness/Species.richness.full.pdf", 
+       width=12, height=12, bg="white")

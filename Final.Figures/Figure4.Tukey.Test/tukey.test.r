@@ -101,8 +101,8 @@ for (i in c(1:nrow(coms))){
   df_result<-df_result[type!="N_SPECIES"]
   unique(df_result$type)
   type.labs <- c("net_dr"= "net per capita diversification rate",
-                "R_EXTINCTION_SPECIES"=  "net per capita extinction",
-                "R_SPECIATION_SPECIES" ="net per capita speciation")
+                "R_EXTINCTION_SPECIES"=  "extinction rate",
+                "R_SPECIATION_SPECIES" ="speciation rate")
   
   df_result[type!="net_dr"]$diff <- df_result[type!="net_dr"]$diff/1000
   df_result[type!="net_dr"]$lwr <- df_result[type!="net_dr"]$lwr/1000
@@ -123,19 +123,24 @@ for (i in c(1:nrow(coms))){
     geom_vline(aes(xintercept=0), linetype=2, color="#444444")+
     scale_y_discrete(limits=rev)+
     facet_wrap(~type, scale="free_x", labeller = 
-                 labeller(type = type.labs))+
-    scale_color_manual(values=c("#EE6677", "#000000", "#4477AA"), breaks=c("Greater", "No sig dif", "Less"))+
+                 labeller(type = type.labs), nrow=1, ncol=3)+
+    scale_color_manual(values=c("#EE6677", "#000000", "#4477AA"), 
+                       breaks=c("Greater", "No sig dif", "Less"))+
     labs(color="")+
     theme_bw()+
     guides(y = ggh4x::guide_axis_nested(delim = "&"))+
     theme(ggh4x.axis.nestline.y = element_line(linewidth = 1.1),
           ggh4x.axis.nesttext.y = element_text(size = 10, face ="bold"),
-          axis.title.y = element_blank())
+          axis.title.y = element_blank(),
+          panel.spacing.x = unit(8, "mm"))
   
   #scale_x_discrete(guide = guide_axis(n.dodge = 2))
   p
   
   
   ggsave(p, filename=sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_%s_%s.png", com$nb, com$da),
-         width=10, height=3)
+         width=12, height=3)
+  
+  ggsave(p, filename=sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_%s_%s.pdf", com$nb, com$da),
+         width=12, height=3)
 }

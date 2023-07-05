@@ -28,10 +28,11 @@ if (F){
     by=seq_len(nrow(d_with_null))]
   table(d_with_null$label)
   d_with_null$AREA_PER_GROUP<-d_with_null$N_CELLS/d_with_null$N_GROUP
+  
   saveRDS(d_with_null, "../Data/distribution_traits/distribution_traits_se_without_nb_da_without_3SD_outliers_global_id_t.test.rda")
 }
 
-
+d_with_null<-readRDS("../Data/distribution_traits/distribution_traits_se_without_nb_da_without_3SD_outliers_global_id_t.test.rda")
 my.pairwise.t.test<-function(item, var, side){
   t.test<-pairwise.t.test(pull(item[, ..var]), 
                           item$label, 
@@ -49,7 +50,7 @@ my.pairwise.t.test<-function(item, var, side){
   p.table
 }
 
-coms<-data.table(expand.grid(nb=c(NA, "BROAD", "NARROW"), da=c(NA, "GOOD", "POOR")))
+coms<-data.table(expand.grid(nb=c(NA), da=c(NA)))
 i=1
 var="N_GROUP"
 for (i in c(1:nrow(coms))){

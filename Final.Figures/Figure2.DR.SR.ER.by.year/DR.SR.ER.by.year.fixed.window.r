@@ -61,7 +61,8 @@ for (i in c(1:nrow(coms))){
     labs(x=x_label, y="Number of speciestions per 1K species")+
     theme_bw()+
     theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank())
+          axis.title.x = element_blank(),
+          legend.title = element_blank())
   
   p1
   p2<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_EXTINCTION_SPECIES, 
@@ -72,7 +73,8 @@ for (i in c(1:nrow(coms))){
     labs(x=x_label, y="Number of extinctions per 1K species")+
     theme_bw()+
     theme(axis.text.x = element_blank(),
-          axis.title.x = element_blank())
+          axis.title.x = element_blank(),
+          legend.title = element_blank())
   p2
   p3<-ggplot(d_se)+geom_line(aes(x=to/10, y=net_dr, 
                                  color=label_line, 
@@ -82,7 +84,8 @@ for (i in c(1:nrow(coms))){
     scale_linetype_manual("Evolution scenario", values=evo_type_line)+
     labs(x=x_label, y="Net per capita diversification rate",
          linetype="", color="Evolution scenario")+
-    theme_bw()
+    theme_bw()+
+    theme(legend.title = element_blank())
   p3
   width<-10
   height<-9

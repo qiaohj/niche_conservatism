@@ -63,7 +63,7 @@ for (i in c(1:nrow(coms))){
     geom_ribbon(aes(x=year, ymin=V_min, ymax=V_max, fill=SP_ID), alpha=0.2)+
     geom_line(aes(x=year, y=V_mean, color=SP_ID))+
     facet_wrap(~VAR, nrow=2, scale="free")+
-    labs(x="k ybp")+
+    labs(x=x_label)+
     theme_bw()+
     theme(legend.position = "none", 
           axis.title.y = element_blank())

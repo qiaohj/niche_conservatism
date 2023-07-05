@@ -87,5 +87,7 @@ p<-ggarrange(plotlist=list(ggarrange(plotlist=list(p1, p2), nrow=2, ncol=1), p3)
              nrow=2, ncol=1, common.legend = F, heights=c(1.7, 1))
 p
 ggsave(p, filename="../Figures/Figure3.SP.EX.SPECIES/N_Speciation.Extinction.Species.png", 
-       width=13, height=10)
+       width=14, height=10)
 
+ggsave(p, filename="../Figures/Figure3.SP.EX.SPECIES/N_Speciation.Extinction.Species.pdf", 
+       width=14, height=10)

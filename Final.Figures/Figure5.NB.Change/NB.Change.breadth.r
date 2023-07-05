@@ -25,6 +25,7 @@ d_gg<-d[((directional_speed %in% c(0) & species_evo_type==1) |
            (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7)))]
 
 d_gg<-formatLabels(d_gg)
+
 p<-ggplot(d_gg[species_evo_level==0 & year==1200])+
   geom_hline(data=df_fn, aes(yintercept = yintercept), linetype=2, alpha=0.4)+
   geom_point(aes(y=V_range, x=label_x, color=nb, shape=da, group=da), position=position_dodge(0.5))+
@@ -40,14 +41,16 @@ p<-ggplot(d_gg[species_evo_level==0 & year==1200])+
 
 #theme(axis.text.x=element_text(angle=-90, hjust=0, vjust=0))
 p
-ggsave("../Figures/Figure5.NB.Change/FN_end.png", width=13.5, height=6)
-
-p<-ggplot(d_gg[species_evo_level==0])+
-  #geom_hline(data=df_fn, aes(yintercept = yintercept), linetype=2, alpha=0.4)+
-  geom_line(aes(y=V_range, x=(year-1200)/10, color=evo_type, linetype=factor(directional_speed)))+
-  labs(color="Evolution type",  linetype="Evolution rate", y="Fundamental niche breadth", x="Xk year before present")+
-  facet_grid(VAR~nb+da, scale="free")+
-  theme_bw()+
-  scale_color_colorblind()
-p
-ggsave("../Figures/Figure5.NB.Change/FN_all.png", width=12, height=8)
+ggsave("../Figures/Figure5.NB.Change/FN_end.png", width=14, height=6)
+ggsave("../Figures/Figure5.NB.Change/FN_end.pdf", width=14, height=6)
+if (F){
+  p<-ggplot(d_gg[species_evo_level==0])+
+    #geom_hline(data=df_fn, aes(yintercept = yintercept), linetype=2, alpha=0.4)+
+    geom_line(aes(y=V_range, x=(year-1200)/10, color=evo_type, linetype=factor(directional_speed)))+
+    labs(color="Evolution type",  linetype="Evolution rate", y="Fundamental niche breadth", x="Xk year before present")+
+    facet_grid(VAR~nb+da, scale="free")+
+    theme_bw()+
+    scale_color_colorblind()
+  p
+  ggsave("../Figures/Figure5.NB.Change/FN_all.png", width=12, height=8)
+}

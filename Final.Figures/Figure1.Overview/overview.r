@@ -146,7 +146,7 @@ p <- ggplot(v_tmax_mean, aes(x = year * -0.1))+
   geom_line(data=v_prcp_mean, aes(y = mean_v * 8 - 35), colour = "#4477AA")+
   scale_y_continuous(sec.axis = sec_axis(~(.+35)/8, name = "Precipitation (mm/day)"))+
   labs(y = "Maximum Temperature (degree)",
-       x = "K years before present")+
+       x = x_label)+
   xlim(-120, 0)+
   theme_bw()+
   theme(legend.position = c(0.8, 0.9),
@@ -375,7 +375,7 @@ p_seeds2<-ggplot(polygon_tmax) +
         axis.title = element_blank(),
         legend.position = "none")
 p_seeds<-ggarrange(p_seeds1, p_seeds2, nrow=1)
-p_seeds<-annotate_figure(p_seeds, top = "seed cells")
+p_seeds<-annotate_figure(p_seeds, top = "Seed cells")
 
 ggsave(p_seeds, filename="../Figures/Figure1.Overview/seeds.pdf", width=12, height=6, bg="white")
 ggsave(p_seeds, filename="../Figures/Figure1.Overview/seeds.png", width=12, height=6, bg="white")
@@ -394,7 +394,7 @@ diversity_final$N_SPECIES<-round(diversity_final$mean_N_SPECIES)
 #diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
 p.richness<-create_fig(diversity_final[group=="conservatism"], "Niche conservatism", 
-                       with_label=T, legend_label="species numbers")
+                       with_label=T, legend_label="Species numbers")
 ggsave(p.richness, filename="../Figures/Figure1.Overview/species.richness.niche.conservatism.png",
        width=6, height=6, bg="white")
 
@@ -409,13 +409,14 @@ n_splist_df<-merge(n_splist_df, mask, by="global_id")
 n_splist_df$lat_band<-round(n_splist_df$lat/5) * 5
 n_splist_df$mean_N_SPECIES_scaled<-n_splist_df$mean_N_SPECIES/max(n_splist_df$mean_N_SPECIES)
 birds_st<-data.table(global_id=birds$global_id, lon=birds$lon, lat=birds$lat, mean_N_SPECIES=birds$richness,
-                     group="birds")
+                     group="Birds")
 birds_st$lat_band<-round(birds_st$lat/5) * 5
 birds_st$mean_N_SPECIES_scaled<-birds_st$mean_N_SPECIES/max(birds_st$mean_N_SPECIES)
 mammals_st<-data.table(global_id=mammals$global_id, lon=mammals$lon, lat=mammals$lat, mean_N_SPECIES=mammals$richness,
-                     group="mammals")
+                     group="Mammals")
 mammals_st$lat_band<-round(mammals_st$lat/5) * 5
 mammals_st$mean_N_SPECIES_scaled<-mammals_st$mean_N_SPECIES/max(mammals_st$mean_N_SPECIES)
+n_splist_df$group<-"Conservatism"
 all_dt<-rbindlist(list(birds_st, mammals_st, n_splist_df), use.names = T, fill=T)
 
 
@@ -443,9 +444,9 @@ p_lat_band<-ggplot(n_splist_df_ratio_lat)+
   xlim(0.08, 0.75)+
   ylim(-50, 70)+
   scale_color_manual(values=c("#228833", "#EE6677", "#4477AA"), 
-                     breaks = c("birds", "mammals", "conservatism"))+
+                     breaks = c("Birds", "Mammals", "Conservatism"))+
   scale_fill_manual(values=c("#228833", "#EE6677", "#4477AA"), 
-                     breaks = c("birds", "mammals", "conservatism"))+
+                     breaks = c("Birds", "Mammals", "Conservatism"))+
   theme(legend.position = c(0.7, 0.7),
         #axis.title.x = element_blank(),
         plot.margin = unit(c(0.01, 0, 0, 0.01), "null"))
@@ -457,7 +458,7 @@ p_seeds2_part<-ggplot(polygon_tmax) +
   coord_sf(crs = st_crs(crs_america))+ 
   ylim(0, 1e6)+
   xlim(0e6, 1.5e6)+
-  theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", size = 0.5), 
+  theme(panel.grid.major = element_line(color = "#d4d4d4", linetype = "dashed", lineend = 0.5), 
         panel.background = element_rect(fill = "#FFFFFF"),
         axis.title = element_blank())
 p_seeds2_part

@@ -30,32 +30,37 @@ df_all_se_gg<-df_all_se[((directional_speed %in% c(0) & species_evo_type==1) |
 df_all_se_gg[V_L=="Debiased_Maximum_Monthly_Precipitation"]$V_L<-"Precipitation"
 df_all_se_gg[V_L=="Debiased_Maximum_Monthly_Temperature"]$V_L<-"Temperature"
 df_all_se_gg$V_L<-factor(df_all_se_gg$V_L, levels=c("Temperature", "Precipitation"))
-p1<-ggplot(df_all_se_gg[directional_speed==0.1], aes(x=(year-1200) * 0.1))+
+df_all_se_gg<-formatLabels(df_all_se_gg)
+
+item<-df_all_se_gg[directional_speed==0.1]
+p1<-ggplot(item, aes(x=(year-1200) * 0.1))+
   geom_line(aes(color=V_L, y=V_min_next_delta))+
   geom_line(aes(color=V_L, y=V_max_next_delta))+
-  facet_wrap(~label,  nrow=1, ncol=3)+
+  facet_wrap(~label_line,  nrow=1, ncol=3)+
   scale_color_manual(values=c("#4477AA", "#EE6677"), breaks=c("Precipitation", "Temperature"))+
-  labs(x="k years before present", color="Environmental variable")+
+  labs(x=x_label, color="Environmental variable")+
   theme_bw()+
   theme(axis.title = element_blank())
 p1
-p2<-ggplot(df_all_se_gg[directional_speed==0.5], aes(x=(year-1200) * 0.1))+
+
+item<-df_all_se_gg[directional_speed==0.5]
+p2<-ggplot(item, aes(x=(year-1200) * 0.1))+
   geom_line(aes(color=V_L, y=V_min_next_delta))+
   geom_line(aes(color=V_L, y=V_max_next_delta))+
-  facet_wrap(~label,  nrow=1, ncol=3)+
+  facet_wrap(~label_line,  nrow=1, ncol=3)+
   scale_color_manual(values=c("#4477AA", "#EE6677"), breaks=c("Precipitation", "Temperature"))+
-  labs(x="k years before present", color="Environmental variable")+
+  labs(x=x_label, color="Environmental variable")+
   theme_bw()+
   theme(axis.title = element_blank())
 
 p2
-df_all_se_gg[directional_speed==0.5 & species_evo_type==2]
-p3<-ggplot(df_all_se_gg[directional_speed==0.01], aes(x=(year-1200) * 0.1))+
+item<-df_all_se_gg[directional_speed==0.01]
+p3<-ggplot(item, aes(x=(year-1200) * 0.1))+
   geom_line(aes(color=V_L, y=V_min_next_delta))+
   geom_line(aes(color=V_L, y=V_max_next_delta))+
-  facet_wrap(~label,  nrow=1, ncol=3)+
+  facet_wrap(~label_line,  nrow=1, ncol=3)+
   scale_color_manual(values=c("#4477AA", "#EE6677"), breaks=c("Precipitation", "Temperature"))+
-  labs(x="k years before present", color="Environmental variable")+
+  labs(x=x_label, color="Environmental variable")+
   theme_bw()+
   theme(axis.title.y = element_blank())
 p3
