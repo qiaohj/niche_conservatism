@@ -194,6 +194,9 @@ p<-annotate_figure(p, bottom = "Number of species")
 n_splist_df_random_lat$change_rate<-"random"
 n_splist_df_full<-rbindlist(list(n_splist_df_ratio_lat, n_splist_df_random_lat), use.names = T, fill=T)
 
+n_splist_df_full$change_rate <- factor(n_splist_df_full$change_rate,
+                    levels = c("change rate = 10%", "change rate = 50%", "random"),
+                    labels=c("change rate = 10%", "change rate = 50%", "random niche change"))
 p<-ggplot(n_splist_df_full)+
   
   #geom_point(aes(x=N_Species, y=mid, color=label))+
@@ -215,7 +218,8 @@ p<-ggplot(n_splist_df_full)+
         axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.y = element_blank(),
-        legend.title = element_blank())
+        legend.title = element_blank(),
+        legend.position = "bottom")
 p
 
 

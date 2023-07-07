@@ -24,4 +24,4 @@ my_table<-nice_table(t.test.item,
                      stars=T,
                      col.format.p=2)
 flextable::save_as_docx(my_table, path = 
-                          sprintf("../Figures/Tabls2.t.test.fragmentation/t.test.docx"))
+                          sprintf("../Figures/Table2.t.test.fragmentation/t.test.docx"))

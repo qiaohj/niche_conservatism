@@ -17,10 +17,57 @@ library(phylobase)
 library(ggpubr)
 library(heatmaply)
 library(Rmisc)
+library(rempsyc)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
 if (F){
+  #FAO
+  fao<-fread("../Data/faoniches.csv")
+  quantile(fao$temprange, seq(0,1, 0.1))
+  quantile(fao$preciprange, seq(0,1, 0.1))
+  range(fao$temprange)
+  library(dismo)
+  library(raster)
+  bios<-stack(c("../Raster/wc2.1_10m_bio/wc2.1_10m_bio_1.tif", 
+                "../Raster/wc2.1_10m_bio/wc2.1_10m_bio_5.tif", 
+                "../Raster/wc2.1_10m_bio/wc2.1_10m_bio_6.tif"))
+  bios_df<-data.table(rasterToPoints(bios))
+  model_max<-lm(wc2.1_10m_bio_5 ~ wc2.1_10m_bio_1, data=bios_df)
+  summary(model_max)
+  
+  model_min<-lm(wc2.1_10m_bio_6 ~ wc2.1_10m_bio_1, data=bios_df)
+  summary(model_min)
+  
+  model<-lm(wc2.1_10m_bio_1 ~ wc2.1_10m_bio_5+wc2.1_10m_bio_6, data=bios_df)
+  summary(model)
+  predict(model, data.frame(wc2.1_10m_bio_5=c(0, 0),
+                            wc2.1_10m_bio_6=c(40, 60)))
+  quantile(fao$temprange-1, seq(0,1, 0.1))
+  fao$wc2.1_10m_bio_1<-fao$TMIN
+  fao$fixed_tmin<-predict.lm(model_min, fao)
+  fao$wc2.1_10m_bio_1<-fao$TMAX
+  fao$fixed_tmax<-predict.lm(model_max, fao)
+  fao$fixed_range<-fao$fixed_tmax - fao$fixed_tmin
+  quantile(fao$fixed_range, seq(0,1, 0.1))
+  #dispersal
+  #0.710669364,0.999605965,0.9999990249999999,0.999999999299,1.0
+  #0.376596738,0.724239343,0.976679685,0.9995805560000001,1.0
+  da_df<-data.table(DISTANCE=c(0:4),
+                    GOOD=c(0.376596738,0.724239343,0.976679685,0.9995805560000001,1.0),
+                    POOR=c(0.710669364,0.999605965,0.9999990249999999,0.999999999299,1.0))
+  da_df[2:5,]$GOOD<-da_df[2:5,]$GOOD - da_df[1:4,]$GOOD
+  da_df[2:5,]$POOR<-da_df[2:5,]$POOR - da_df[1:4,]$POOR
+  da_df$GOOD<-sprintf("%.4f", da_df$GOOD)
+  da_df$POOR<-sprintf("%.4f", da_df$POOR)
+  da_df$DISTANCE<-as.character(da_df$DISTANCE)
+  tt<-nice_table(da_df, 
+             title=c("Dispersal ability"),
+             stars=T,
+             col.format.custom = 1:2,
+             format.custom = "format_digits")
+  flextable::save_as_docx(tt, path = 
+                 sprintf("../Figures/Table3.Dispersal.ability/da.docx"))
   #Stat
   df<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction.rda")
   df<-df[year==0]
@@ -101,6 +148,8 @@ if (F){
                 max=max(N_CELLS)),
              by=list(species_evo_type, directional_speed)]
   csv$evo_type<-format_evoType(csv$species_evo_type)
+  
+  csv<-formatLabels(csv)
   write.csv(csv, "../Data/distribution_traits/ncell.csv", row.names = F)
   birds<-readRDS("/media/huijieqiao/Butterfly/Niche_Conservatism/Data/IUCN_NB/Birds.rda")
   birds$evo_type<-"Birds"
@@ -127,9 +176,22 @@ if (F){
                 max=max(n_cell),
                 directional_speed=0),
              by=list(evo_type)]
-  csv<-rbindlist(list(csv, birds_se, mammals_se), fill=T, use.names = T)
-  csv$species_evo_type<-NULL
-  write.csv(csv, "../Figures/Figure1.Overview/Data/ncell.csv", row.names = F)
+  
+  csv<-csv[, c("label_line", "q25", "mean", "q75")]
+  colnames(birds_se)[1]<-"label_line"
+  birds_se<-birds_se[,c("label_line", "q25", "mean", "q75")]
+  colnames(mammals_se)[1]<-"label_line"
+  mammals_se<-mammals_se[,c("label_line", "q25", "mean", "q75")]
+  
+  csv_all<-rbindlist(list(csv, birds_se, mammals_se), fill=T, use.names = T)
+  #csv$species_evo_type<-NULL
+  write.csv(csv_all, "../Figures/Figure1.Overview/Data/ncell.csv", row.names = F)
+  csv_all$q25<-as.character(round(csv_all$q25))
+  csv_all$mean<-as.character(round(csv_all$mean))
+  csv_all$q75<-as.character(round(csv_all$q75))
+  tt<-nice_table(csv_all)
+  flextable::save_as_docx(tt, path = 
+                            sprintf("../Figures/Table4.N_Cells/ncell.docx"))
 }
 polygon<-readRDS("../Figures/Figure1.Overview/Data/polygon.rda")
 

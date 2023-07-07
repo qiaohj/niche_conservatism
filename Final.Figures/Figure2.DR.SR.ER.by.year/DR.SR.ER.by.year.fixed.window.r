@@ -52,25 +52,25 @@ for (i in c(1:nrow(coms))){
   }
   
   d_se<-formatLabels(d_se)
-  p1<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_SPECIATION_SPECIES, 
+  p1<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_SPECIATION_SPECIES/1000, 
                                  color=label_line, 
                                  linetype=label_line))+
     scale_color_manual("Evolution scenario", values=evo_type_color)+
     scale_linetype_manual("Evolution scenario", 
                           values=evo_type_line)+
-    labs(x=x_label, y="Number of speciestions per 1K species")+
+    labs(x=x_label, y="net speciestions")+
     theme_bw()+
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
           legend.title = element_blank())
   
   p1
-  p2<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_EXTINCTION_SPECIES, 
+  p2<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_EXTINCTION_SPECIES/1000, 
                                  color=label_line, 
                                  linetype=label_line))+
     scale_color_manual("Evolution scenario", values=evo_type_color)+
     scale_linetype_manual("Evolution scenario", values=evo_type_line)+
-    labs(x=x_label, y="Number of extinctions per 1K species")+
+    labs(x=x_label, y="net extinctions")+
     theme_bw()+
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
@@ -87,31 +87,31 @@ for (i in c(1:nrow(coms))){
     theme_bw()+
     theme(legend.title = element_blank())
   p3
-  width<-10
+  width<-12
   height<-9
   if (is.na(com$nb) & !is.na(com$da)){
     p1<-p1+facet_wrap(~da, nrow=1)
     p2<-p2+facet_wrap(~da, nrow=1)
     p3<-p3+facet_wrap(~da, nrow=1)
-    width<-12
+    width<-14
     height<-9
   }
   if (!is.na(com$nb) & is.na(com$da)){
     p1<-p1+facet_wrap(~nb, nrow=1)
     p2<-p2+facet_wrap(~nb, nrow=1)
     p3<-p3+facet_wrap(~nb, nrow=1)
-    width<-12
+    width<-14
     height<-9
   }
   if (!is.na(com$nb) & !is.na(com$da)){
     p1<-p1+facet_grid(da~nb)
     p2<-p2+facet_grid(da~nb)
     p3<-p3+facet_grid(da~nb)
-    width<-12
+    width<-14
     height<-15
     
   }
-  p<-ggarrange(plotlist=list(p1, p2, p3), nrow=3, ncol=1, common.legend = T, legend = "right")
+  p<-ggarrange(plotlist=list(p1, p2, p3), nrow=3, ncol=1, common.legend = T, legend = "bottom")
   p
   ggsave(p, filename=sprintf("../Figures/Figure2.DR.SR.ER.by.year/fixed.window.Figure2.DR.SR.ER.by.year.%s.%s.png", com$nb, com$da), 
          width=width, height=height, bg = "white")

@@ -11,7 +11,7 @@ library(phangorn)
 library(phytools)
 library(geiger)
 library(stringr)
-library(plotKML)
+#library(plotKML)
 library(ggtree)
 library(phylobase)
 library(ggpubr)
@@ -19,6 +19,7 @@ library(heatmaply)
 library(data.table)
 
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
+source("commons/functions.r")
 setDTthreads(20)
 #source("commons/diverging_map.r")
 polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
@@ -135,56 +136,68 @@ if (F){
   
 }
 if (F){
-  dddd<-list()
-  dddd_nb<-list()
-  dddd_nb_da<-list()
+  
   i=1
-  for (i in c(1:100)){
-    print(i)
-    target<-sprintf("../Data/diversity_boostrap_items_full_year/%d.rda", i)
-    item<-readRDS(target)
-    dddd[[length(dddd)+1]]<-item
+  y=0
+  for (y in c(0:1198)){
+    dddd<-list()
+    dddd_nb<-list()
+    dddd_nb_da<-list()
+    for (i in c(1:40)){
+      print(paste(y, i))
+      target<-sprintf("../Data/diversity_boostrap_items_full_year/r_%d/y%d_r%d.rda", i, y, i)
+      
+      item<-readRDS(target)
+      dddd[[length(dddd)+1]]<-item
+      
+      target_nb<-sprintf("../Data/diversity_boostrap_items_full_year/r_%d/y%d_r%d_nb.rda", i, y, i)
+      item_nb<-readRDS(target_nb)
+      dddd_nb[[length(dddd_nb)+1]]<-item_nb
+      
+      target_nb_da<-sprintf("../Data/diversity_boostrap_items_full_year/r_%d/y%d_r%d_nb_da.rda", i, y, i)
+      item_nb_da<-readRDS(target_nb_da)
+      dddd_nb_da[[length(dddd_nb_da)+1]]<-item_nb_da
+    }
+    dddd<-rbindlist(dddd)
+    dddd_se<-dddd[, .(mean_N_SPECIES=mean(N_SPECIES), 
+                      medium_N_SPECIES=quantile(N_SPECIES, 0.5),
+                      ci=my_CI(N_SPECIES),
+                      sd_N_SPECIES=sd(N_SPECIES)),
+                  by=list(global_id, species_evo_type, directional_speed, year)]
+    dddd_se$group<-"random"
+    dddd_se[species_evo_type==1]$group<-"conservatism"
+    dddd_se[species_evo_type==2]$group<-"shift-directional"
+    dddd_se[species_evo_type==3]$group<-"expansion-directional"
+    dddd_se[species_evo_type==4]$group<-"expansion-omnidirectional"
+    saveRDS(dddd_se, sprintf("../Data/diversity/diversity_bootstrap_years/%d.rda", y))
     
-    target_nb<-sprintf("../Data/diversity_boostrap_items_full_year/%d_nb.rda", i)
-    item_nb<-readRDS(target_nb)
-    dddd_nb[[length(dddd_nb)+1]]<-item_nb
+    dddd_nb<-rbindlist(dddd_nb)
+    dddd_nb_se<-dddd_nb[, .(mean_N_SPECIES=mean(N_SPECIES), 
+                            medium_N_SPECIES=quantile(N_SPECIES, 0.5),
+                            ci=my_CI(N_SPECIES),
+                            sd_N_SPECIES=sd(N_SPECIES)),
+                        by=list(global_id, species_evo_type, directional_speed, nb, year)]
+    dddd_nb_se$group<-"random"
+    dddd_nb_se[species_evo_type==1]$group<-"conservatism"
+    dddd_nb_se[species_evo_type==2]$group<-"shift-directional"
+    dddd_nb_se[species_evo_type==3]$group<-"expansion-directional"
+    dddd_nb_se[species_evo_type==4]$group<-"expansion-omnidirectional"
+    saveRDS(dddd_se, sprintf("../Data/diversity/diversity_bootstrap_years/%d_nb.rda", y))
     
-    target_nb_da<-sprintf("../Data/diversity_boostrap_items_full_year/%d_nb_da.rda", i)
-    item_nb_da<-readRDS(target_nb_da)
-    dddd_nb_da[[length(dddd_nb_da)+1]]<-item_nb_da
+    dddd_nb_da<-rbindlist(dddd_nb_da)
+    dddd_nb_da_se<-dddd_nb_da[, .(mean_N_SPECIES=mean(N_SPECIES), 
+                                  medium_N_SPECIES=quantile(N_SPECIES, 0.5),
+                                  ci=my_CI(N_SPECIES),
+                                  sd_N_SPECIES=sd(N_SPECIES)),
+                              by=list(global_id, species_evo_type, directional_speed, nb, da, year)]
+    dddd_nb_da_se$group<-"random"
+    dddd_nb_da_se[species_evo_type==1]$group<-"conservatism"
+    dddd_nb_da_se[species_evo_type==2]$group<-"shift-directional"
+    dddd_nb_da_se[species_evo_type==3]$group<-"expansion-directional"
+    dddd_nb_da_se[species_evo_type==4]$group<-"expansion-omnidirectional"
+    saveRDS(dddd_se, sprintf("../Data/diversity/diversity_bootstrap_years/%d_nb.rda", y))
+    
   }
-  dddd<-rbindlist(dddd)
-  dddd_se<-dddd[, .(mean_N_SPECIES=mean(N_SPECIES), medium_N_SPECIES=quantile(N_SPECIES, 0.5),
-                    sd_N_SPECIES=sd(N_SPECIES)),
-                by=list(global_id, species_evo_type, directional_speed, year)]
-  dddd_se$group<-"random"
-  dddd_se[species_evo_type==1]$group<-"conservatism"
-  dddd_se[species_evo_type==2]$group<-"shift-directional"
-  dddd_se[species_evo_type==3]$group<-"expansion-directional"
-  dddd_se[species_evo_type==4]$group<-"expansion-omnidirectional"
-  saveRDS(dddd_se, "../Data/diversity/diversity_bootstrap_full.rda")
-  
-  dddd_nb<-rbindlist(dddd_nb)
-  dddd_nb_se<-dddd_nb[, .(mean_N_SPECIES=mean(N_SPECIES), medium_N_SPECIES=quantile(N_SPECIES, 0.5),
-                          sd_N_SPECIES=sd(N_SPECIES)),
-                      by=list(global_id, species_evo_type, directional_speed, nb, year)]
-  dddd_nb_se$group<-"random"
-  dddd_nb_se[species_evo_type==1]$group<-"conservatism"
-  dddd_nb_se[species_evo_type==2]$group<-"shift-directional"
-  dddd_nb_se[species_evo_type==3]$group<-"expansion-directional"
-  dddd_nb_se[species_evo_type==4]$group<-"expansion-omnidirectional"
-  saveRDS(dddd_nb_se, "../Data/diversity/diversity_bootstrap_nb_full.rda")
-  
-  dddd_nb_da<-rbindlist(dddd_nb_da)
-  dddd_nb_da_se<-dddd_nb_da[, .(mean_N_SPECIES=mean(N_SPECIES), medium_N_SPECIES=quantile(N_SPECIES, 0.5),
-                                sd_N_SPECIES=sd(N_SPECIES)),
-                            by=list(global_id, species_evo_type, directional_speed, nb, da, year)]
-  dddd_nb_da_se$group<-"random"
-  dddd_nb_da_se[species_evo_type==1]$group<-"conservatism"
-  dddd_nb_da_se[species_evo_type==2]$group<-"shift-directional"
-  dddd_nb_da_se[species_evo_type==3]$group<-"expansion-directional"
-  dddd_nb_da_se[species_evo_type==4]$group<-"expansion-omnidirectional"
-  saveRDS(dddd_nb_da_se, "../Data/diversity/diversity_bootstrap_nb_da_full.rda")
   
 }
 source("commons/functions.r")
