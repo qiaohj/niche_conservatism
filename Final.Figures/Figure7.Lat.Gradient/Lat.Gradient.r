@@ -10,6 +10,7 @@ setDTthreads(20)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
 mask<-readRDS("../Data/mask_lonlat.rda")
+
 mammals<-st_read("../Shape/IUCN_Richness/Mammals/richness.shp")
 birds<-st_read("../Shape/IUCN_Richness/Birds/richness.shp")
 
@@ -29,6 +30,24 @@ n_splist_df<-readRDS("../Data/diversity/diversity_bootstrap.rda")
 n_splist_df<-merge(n_splist_df, mask, by="global_id")
 n_splist_df$lat_band<-round(n_splist_df$lat/5) * 5
 setorderv(n_splist_df, "lat_band")
+if (F){
+  mask_n<-unique(n_splist_df[, c("global_id", "lon", "lat", "lat_band")])
+  mask_n<-mask_n[, .(N_CELL=.N), by=list(lat_band)]
+  p1<-ggplot(mask_n)+
+    
+    #geom_point(aes(x=N_Species, y=mid, color=label))+
+    geom_path(aes(x=N_CELL, y=lat_band), position="identity")+
+    theme_bw()+
+    labs(x="Land area", y="Latitudinal band")+
+    theme(legend.title = element_blank(),
+          legend.position = c(0.5, 0.25),
+          axis.title.x = element_blank(),
+          plot.margin = unit(c(0.01, 0, 0, 0.01), "null"),
+          legend.background = element_rect(fill=bg))
+  p1
+  
+ }
+
 n_splist_df$evo_type<-format_evoType(n_splist_df$species_evo_type)
 n_splist_df$label<-format_evoType_amplitude(n_splist_df$evo_type, n_splist_df$directional_speed, order=-1)
 #n_splist_df$mean_N_SPECIES_scaled<-n_splist_df$mean_N_SPECIES/
@@ -214,8 +233,9 @@ p<-ggplot(n_splist_df_full)+
   ylim(-50, 70)+
   scale_color_manual(values=evo_type_color2, breaks=names(evo_type_color2))+
   scale_fill_manual(values=evo_type_color2, breaks=names(evo_type_color2))+
-  theme(axis.text.y = element_blank(),
-        axis.title.y = element_blank(),
+  guides(fill=guide_legend(nrow=2,byrow=TRUE),
+         color=guide_legend(nrow=2,byrow=TRUE))+
+  theme(axis.title.y = element_blank(),
         axis.title.x = element_blank(),
         axis.ticks.y = element_blank(),
         legend.title = element_blank(),
@@ -228,6 +248,110 @@ ggsave(p, filename="../Figures/Figure7.Lat.Gradient/Lat_gradient_boot.png",
 
 ggsave(p, filename="../Figures/Figure7.Lat.Gradient/Lat_gradient_boot.pdf",
        width=12, height=6, bg="white")
+
+
+mask_n<-unique(n_splist_df[, c("global_id", "lon", "lat", "lat_band")])
+mask_n<-mask_n[, .(N_CELL=.N), by=list(lat_band)]
+mask_n$scaled_n_cell<-mask_n$N_CELL/max(mask_n$N_CELL) * 0.8
+p<-ggplot(n_splist_df_full)+
+  
+  #geom_point(aes(x=N_Species, y=mid, color=label))+
+  
+  geom_path(aes(x=mean_N_SPECIES_scaled, y=lat_band, color=evo_types_label_color), 
+            position="identity")+
+  geom_ribbon(aes(xmin=mean_N_SPECIES_scaled-CI_mean_N_SPECIES_scaled,
+                  xmax=mean_N_SPECIES_scaled+CI_mean_N_SPECIES_scaled, 
+                  y=lat_band, fill=evo_types_label_color), alpha=0.2)+
+  geom_path(data=mask_n, aes(x=scaled_n_cell, y=lat_band), 
+            position="identity", color="black", linetype=2)+
+  guides(fill=guide_legend(nrow=2,byrow=TRUE),
+         color=guide_legend(nrow=2,byrow=TRUE))+
+  theme_bw()+
+  labs(x="", y="Latitudinal band", color="Evolution scenario",
+       fill="Evolution scenario")+
+  facet_wrap(~change_rate)+
+  #scale_x_continuous(breaks=c(500, 1000, 1500, 2000), labels=c(500, 1000, 1500, 2000))+
+  xlim(0, 0.9)+
+  ylim(-50, 70)+
+  scale_color_manual(values=evo_type_color2, breaks=names(evo_type_color2))+
+  scale_fill_manual(values=evo_type_color2, breaks=names(evo_type_color2))+
+  theme(axis.title.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.ticks.y = element_blank(),
+        legend.title = element_blank(),
+        legend.position = "bottom")
+p
+
+
+ggsave(p, filename="../Figures/Figure7.Lat.Gradient/Lat_gradient_boot_with_land_area.png",
+       width=12, height=6, bg="white")
+
+ggsave(p, filename="../Figures/Figure7.Lat.Gradient/Lat_gradient_boot_with_land_area.pdf",
+       width=12, height=6, bg="white")
+
+n_splist_df_conservatism_se<-n_splist_df_conservatism[, .(mean_N_SPECIES_scaled=mean(mean_N_SPECIES_scaled)),
+                                                      by=list(lat_band)]
+ggplot(n_splist_df_conservatism_se)+geom_line(aes(x=lat_band, y=mean_N_SPECIES_scaled))
+ggplot(n_splist_df_conservatism[lat_band %in% seq(-15, 15, by=5)])+
+  geom_density(aes(x=mean_N_SPECIES_scaled, color=factor(lat_band)))
+
+ggplot(n_splist_df_conservatism[lat_band %in% seq(0, 10, by=5)])+
+  geom_density(aes(x=mean_N_SPECIES_scaled, color=factor(lat_band)))
+
+polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
+polygon$Name<-as.numeric(polygon$Name)
+polygon_left<-polygon[which(polygon$Name %in% n_splist_df_conservatism[lat_band %in% seq(-15, 15, by=5)]$global_id),]
+n_splist_df_conservatism$N_SPECIES<-n_splist_df_conservatism$mean_N_SPECIES_scaled
+n_splist_df_conservatism$lon_group<-"< -20"
+n_splist_df_conservatism[between(lon, -20, 75)]$lon_group<-"between 0 and 50"
+n_splist_df_conservatism[lon>75]$lon_group<-"> 75"
+p5<-create_fig(n_splist_df_conservatism[lat_band %in% c(5)], label="5",polygon=polygon_left)
+p5
+p10<-create_fig(n_splist_df_conservatism[lat_band %in% c(10)], label="10",polygon=polygon_left)
+p10
+p0<-create_fig(n_splist_df_conservatism[lat_band %in% c(0)], label="10",polygon=polygon_left)
+
+p0<-ggplot(n_splist_df_conservatism[lat_band %in% c(0, 5, 10)])+
+  geom_boxplot(aes(x=lon_group, y=mean_N_SPECIES_scaled, color=factor(lat_band)))
+p0
+
+p1<-ggplot(n_splist_df_conservatism[lat_band %in% c(0, 5, 10) & lon_group=="< -20"])+
+  geom_point(aes(x=lon, y=lat, color=mean_N_SPECIES_scaled))+
+  geom_hline(yintercept = 2.5, linetype=2)+
+  geom_hline(yintercept = 7.5, linetype=2)
+p1
+
+p1<-ggplot(n_splist_df_conservatism[lat_band %in% c(0, 5, 10) & lon_group=="< -20"])+
+  geom_point(aes(x=lon, y=lat, color=mean_N_SPECIES_scaled))+
+  geom_hline(yintercept = 2.5, linetype=2)+
+  geom_hline(yintercept = 7.5, linetype=2)
+p1
+
+v_prcp_mean<-v_prcp[, .(v=mean(v),
+                        sd_v=sd(v)), by=global_id]
+
+v_prcp_mean<-merge(v_prcp_mean, mask, by.x="global_id", by.y="global_id")
+p2<-ggplot(v_prcp_mean[lat_band %in% c(0, 5, 10) & (lon<(-20))])+
+  geom_point(aes(x=lon, y=lat, color=v))+
+  geom_hline(yintercept = 2.5, linetype=2)+
+  geom_hline(yintercept = 7.5, linetype=2)
+p2
+
+p3<-ggplot(v_prcp_mean[lat_band %in% c(0, 5, 10) & (lon<(-20))])+
+  geom_point(aes(x=lon, y=lat, color=sd_v))+
+  geom_hline(yintercept = 2.5, linetype=2)+
+  geom_hline(yintercept = 7.5, linetype=2)
+p3
+
+
+d_d<-ggplot(n_splist_df_conservatism[lat_band %in% seq(0, 10, by=5)])+
+  geom_density(aes(x=mean_N_SPECIES_scaled, color=factor(lat_band)))
+
+ppp<-ggarrange(plotlist = list(d_d, p0, p1, p2, p3), nrow=5)
+ggsave(ppp, filename="../Figures/Figure7.Lat.Gradient/Lat_gradient_check.png",
+       width=8, height=12, bg="white")
+ggplot(n_splist_df_conservatism[lat_band %in% c(0, 5, 10)])+
+  geom_point(aes(x=lon, y=lat, color=mean_N_SPECIES_scaled))
 
 
 conservatism<-n_splist_df_full[species_evo_type==1 & change_rate=="change rate = 10%"]

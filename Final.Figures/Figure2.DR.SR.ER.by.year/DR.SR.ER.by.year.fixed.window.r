@@ -58,7 +58,9 @@ for (i in c(1:nrow(coms))){
     scale_color_manual("Evolution scenario", values=evo_type_color)+
     scale_linetype_manual("Evolution scenario", 
                           values=evo_type_line)+
-    labs(x=x_label, y="net speciestions")+
+    labs(x=x_label, y="net speciation")+
+    guides(color=guide_legend(nrow=2,byrow=TRUE),
+           linetype=guide_legend(nrow=2,byrow=TRUE))+
     theme_bw()+
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
@@ -70,7 +72,9 @@ for (i in c(1:nrow(coms))){
                                  linetype=label_line))+
     scale_color_manual("Evolution scenario", values=evo_type_color)+
     scale_linetype_manual("Evolution scenario", values=evo_type_line)+
-    labs(x=x_label, y="net extinctions")+
+    labs(x=x_label, y="net extinction")+
+    guides(color=guide_legend(nrow=2,byrow=TRUE),
+           linetype=guide_legend(nrow=2,byrow=TRUE))+
     theme_bw()+
     theme(axis.text.x = element_blank(),
           axis.title.x = element_blank(),
@@ -82,8 +86,9 @@ for (i in c(1:nrow(coms))){
                                  group=label))+
     scale_color_manual("Evolution scenario", values=evo_type_color)+
     scale_linetype_manual("Evolution scenario", values=evo_type_line)+
-    labs(x=x_label, y="Net per capita diversification rate",
-         linetype="", color="Evolution scenario")+
+    guides(color=guide_legend(nrow=2,byrow=TRUE),
+           linetype=guide_legend(nrow=2,byrow=TRUE))+
+    labs(x=x_label, y="Net per capita diversification rate")+
     theme_bw()+
     theme(legend.title = element_blank())
   p3

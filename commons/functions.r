@@ -1,4 +1,6 @@
 library(Rmisc)
+library(heatmaply)
+library(rnaturalearth)
 x_label<-"Years before present (kyr)"
 change_rate<-"change rate"
 #1: conservatism
@@ -72,23 +74,23 @@ evo_types_label_color<-c("Niche Conservatism",
 evo_type_color <- c('Niche Conservatism'='#000000', 
                 'Directional niche shift (10%)'='#228833', 
                 'Directional niche shift (50%)'='#228833', 
-                'Random niche shift'='#AA3377', 
+                'Random niche shift'='#66CCEE', 
                 'Random niche expansion/reduction'='#EE6677', 
                 'Random niche change and shift'='#CCBB44',
                 'Directional niche expansion (10%)'='#4477AA', 
                 'Directional niche expansion (50%)'='#4477AA', 
-                'Omnidirectional niche expansion (10%)'='#66CCEE',
-                'Omnidirectional niche expansion (50%)'='#66CCEE')
+                'Omnidirectional niche expansion (10%)'='#AA3377',
+                'Omnidirectional niche expansion (50%)'='#AA3377')
 
 evo_type_color2 <- c('Niche Conservatism'='#000000', 
                     'Directional niche shift'='#228833', 
-                    'Random niche shift'='#AA3377', 
+                    'Random niche shift'='#66CCEE', 
                     'Random niche expansion/reduction'='#EE6677', 
                     'Random niche change and shift'='#CCBB44',
                     'Directional niche expansion'='#4477AA', 
-                    'Omnidirectional niche expansion'='#66CCEE',
-                    'Birds'='#DC050C',
-                    'Mammals'='#CAE0AB')
+                    'Omnidirectional niche expansion'='#AA3377',
+                    'Birds'='#CC3311',
+                    'Mammals'='#BBBBBB')
 
 
 evo_type_line <- c('Niche Conservatism'=1, 
@@ -178,7 +180,7 @@ t.test_my<-function(var, items, altern, com){
   com[p_value<0.001]$p_label<-"***"
   com
 }
-TukeyHSD_B<-function(var, df){
+TukeyHSD_B<-function(var, df, tested_label="conservatism"){
   plant.lm <- lm(as.formula(sprintf("%s ~ label", var)), data = df)
   plant.av <- aov(plant.lm)
   summary(plant.av)
@@ -187,7 +189,7 @@ TukeyHSD_B<-function(var, df){
   #plot(tukey.test)
   tukey.test.df<-data.table(tukey.test$label)
   tukey.test.df$label<-row.names(tukey.test$label)
-  tukey.test.df<-tukey.test.df[grepl("conservatism", label)]
+  tukey.test.df<-tukey.test.df[grepl(tested_label, label)]
   
   
   tukey.test.df$p_label<-""
@@ -290,9 +292,13 @@ lm_fun<-function(null_model, df_item, y, y_short, x, species_evo_type, direction
 }
 
 create_fig<-function(item_y, label="", barwidth=10, with_label=T, 
-                     legend_label="", polygon=NULL){
+                     legend_label="", polygon=NULL, world=NULL){
   if (is.null(polygon)){
     polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
+  }
+  if (is.null(world)){
+    world <- ne_countries(scale = "small", returnclass = "sf")
+    
   }
   threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
   #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
@@ -401,6 +407,21 @@ formatLabelX<-function(d_item){
   d_item[label=="expansion-omnidirectional (0.1)"]$label_x<-evo_types_label_x[9]
   d_item[label=="expansion-omnidirectional (0.5)"]$label_x<-evo_types_label_x[10]
   d_item$label_x<-factor(d_item$label_x, levels=evo_types_label_x)
+  
+  d_item
+}
+evo_types_label_xy<-c("Directional 10% vs 50% & Shift",
+                      "Directional 10% vs 50% & Expansion",
+                      "Omnidirectional 10% vs 50% & Expansion")
+formatLabelXY<-function(d_item){
+  d_item$label_x<-evo_types_label_xy[1]
+  d_item[label=="shift-directional (0.1)-shift-directional (0.5)"]$label_x<-evo_types_label_xy[1]
+  
+  d_item[label=="expansion-directional (0.1)-expansion-directional (0.5)"]$label_x<-evo_types_label_xy[2]
+  
+  d_item[label=="expansion-omnidirectional (0.1)-expansion-omnidirectional (0.5)"]$label_x<-evo_types_label_xy[3]
+  
+  d_item$label_x<-factor(d_item$label_x, levels=evo_types_label_xy)
   
   d_item
 }

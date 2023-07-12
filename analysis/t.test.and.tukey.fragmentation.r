@@ -96,6 +96,12 @@ for (i in c(1:nrow(coms))){
                             less.t.test.N_GROUP, 
                             greater.t.test.N_GROUP))
   
+  tukey_N_CELLS<-TukeyHSD_B("N_CELLS", item, "")
+  tukey_N_GROUP<-TukeyHSD_B("N_GROUP", item, "")
+  saveRDS(tukey_N_CELLS, sprintf("../Figures/20230616/t.test/tukey_n.cells.by_species_distribution_%s_%s.rda", com$nb, com$da))
+  saveRDS(tukey_N_GROUP, sprintf("../Figures/20230616/t.test/tukey_n.groups.by_species_distribution_%s_%s.rda", com$nb, com$da))
+  
+  
   p<-ggplot(df_result[side!="two.sided" & p_label!=""])+
     geom_tile(aes(x=var, y=V1, fill=side))+
     geom_text(aes(x=var, y=V1, label=p_label))+
