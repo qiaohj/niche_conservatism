@@ -25,7 +25,7 @@ polygon<-readRDS("../Figures/Example/polygon.rda")
 nb<-"BROAD"
 da<-"GOOD"
 #diversity<-readRDS(sprintf("/media/huijieqiao/QNAS/Niche_Conservatism/Data/diversity_items/%s_%s.rda", nb, da))
-diversity<-readRDS("../Data/diversity.rda")
+diversity<-readRDS("../Data/diversity/diversity.rda")
 world <- ne_countries(scale = "small", returnclass = "sf")
 
 

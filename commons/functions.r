@@ -292,7 +292,8 @@ lm_fun<-function(null_model, df_item, y, y_short, x, species_evo_type, direction
 }
 
 create_fig<-function(item_y, label="", barwidth=10, with_label=T, 
-                     legend_label="", polygon=NULL, world=NULL){
+                     legend_label="", polygon=NULL, world=NULL,
+                     is_uniform=F){
   if (is.null(polygon)){
     polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
   }
@@ -300,32 +301,55 @@ create_fig<-function(item_y, label="", barwidth=10, with_label=T,
     world <- ne_countries(scale = "small", returnclass = "sf")
     
   }
-  threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
-  #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
   threshold<-7000
-  max_n_sp<-max(item_y$N_SPECIES)
-  min_n_sp<-min(item_y$N_SPECIES)
-  if (threshold>max_n_sp){
-    midpoint<-round(max_n_sp/2)
-    breakss<-c(min_n_sp, midpoint, max_n_sp)
-    labelss<-c("0", "", as.character(max_n_sp))
+  item_y[N_SPECIES>threshold]$N_SPECIES<-threshold
+  item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
+  #threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
+  #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
+  
+  
+  if (is_uniform==F){
+    if ("max_species" %in% colnames(item_y)){
+      max_n_sp<-max(item_y$max_species)
+      min_n_sp<-min(item_y$N_SPECIES)
+      #print(item_y)
+      geom.sf<-geom_sf(data=item_y[which(item_y$N_SPECIES>0),][1,], aes(colour=max_species))
+      
+    }else{
+      max_n_sp<-max(item_y$N_SPECIES)
+      min_n_sp<-min(item_y$N_SPECIES)
+      geom.sf<-NULL
+    }
+    if (threshold>max_n_sp){
+      midpoint<-round(max_n_sp/2)
+      breakss<-c(min_n_sp, midpoint, max_n_sp)
+      labelss<-c("0", "", as.character(max_n_sp))
+    }else{
+      midpoint<-round(threshold/2)
+      breakss<-c(min_n_sp, midpoint, threshold)
+      labelss<-c("0", "", sprintf(">%d, up to %d", threshold, max_n_sp))
+    }
+    gradient_colors<-scale_color_gradient2(low  = "#4477AA", high="#EE6677",
+                          mid = "#DDDDDD", midpoint=midpoint,
+                          breaks=breakss, 
+                          labels=labelss)
   }else{
-    midpoint<-round(threshold/2)
-    breakss<-c(min_n_sp, midpoint, threshold)
-    labelss<-c("0", "", sprintf(">%d, up to %d", threshold, max_n_sp))
+    gradient_colors<-scale_color_gradient2(low  = "#4477AA", high="#4477AA",
+                                           mid = "#4477AA")
   }
   
   
-  item_y[N_SPECIES>threshold]$N_SPECIES<-threshold
-  item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
+  
+  
   
   p_asia<-ggplot(item_y, aes(colour=N_SPECIES)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-    geom_sf()+
-    scale_color_gradient2(low  = "#4477AA", high="#EE6677",
-                          mid = "#DDDDDD", midpoint=midpoint,
-                          breaks=breakss, 
-                          labels=labelss)+
+    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3")
+  
+  if (!is.null(geom.sf)){
+    p_asia<-p_asia+geom.sf
+  }
+  p_asia<-  p_asia+geom_sf()+
+    gradient_colors+
     
     #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
     coord_sf(crs = st_crs(crs_asia))+
@@ -343,12 +367,12 @@ create_fig<-function(item_y, label="", barwidth=10, with_label=T,
   #p_asia<-p_asia+theme(legend.position = "none")
   
   p_america<-ggplot(item_y, aes(colour=N_SPECIES)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
-    geom_sf()+
-    scale_color_gradient2(low  = "#4477AA", high="#EE6677",
-                          mid = "#DDDDDD", midpoint=midpoint,
-                          breaks=breakss, 
-                          labels=labelss)+
+    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") 
+  if (!is.null(geom.sf)){
+    p_america<-p_america+geom.sf
+  }
+  p_america<-  p_america+geom_sf()+
+    gradient_colors+
     
     #scale_fill_gradientn(colors = mycol, values=seq(from=min_temp, to=max_temp, by=1))+
     coord_sf(crs = st_crs(crs_america))+
@@ -369,6 +393,125 @@ create_fig<-function(item_y, label="", barwidth=10, with_label=T,
   }
   return(p)
 }
+create_fig_map<-function(item_y, label="", barwidth=10, with_label=T, 
+                         legend_label="", polygon=NULL, world=NULL,
+                         is_uniform=F){
+  if (is.null(polygon)){
+    polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
+  }
+  if (is.null(world)){
+    world <- ne_countries(scale = "small", returnclass = "sf")
+    
+  }
+  
+  coord<-data.table(st_coordinates(polygon))
+  
+  coord_se<-coord[, .(max_x=max(X),
+                      min_x=min(X)),
+                  by=list(L2)]
+  coord_se$range<-coord_se$max_x-coord_se$min_x
+  
+  coord_se$is_valid<-ifelse(coord_se$range>50, "F", "T")
+  polygon<-merge(polygon, coord_se, by.x="Name", by.y="L2")
+  polygon<-polygon[which(polygon$range<50),]
+  polygon$Name<-as.numeric(polygon$Name)
+  threshold<-7000
+  item_y[N_SPECIES>threshold]$N_SPECIES<-threshold
+  #item_y<-item_y[which(item_y$global_id %in% polygon$Name),]
+  #print(item_y)
+  item_y$lat_band<-round(item_y$lat/5) * 5
+  item_y_l<-item_y[, .(N_SPECIES=mean(N_SPECIES),
+                       CI_N_SPECIES=my_CI(N_SPECIES)),
+                   by=list(lat_band)]
+  item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES
+  item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix - min(item_y_l$N_SPECIES_fix)
+  range<-max(item_y_l$N_SPECIES_fix) - min(item_y_l$N_SPECIES_fix)
+  item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix/range * 50
+  item_y_l$CI_N_SPECIES<-item_y_l$CI_N_SPECIES/range * 50
+  item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix+170
+  item_y_l<-item_y_l[between(lat_band, -50, 70)]
+  item_y_l$lat_band<-item_y_l$lat_band/120 * 135
+  setorderv(item_y_l, "lat_band")
+  
+  item_y<-data.frame(item_y)
+  item_y<-merge(polygon, item_y, by.x="Name", by.y="global_id")
+  #threshold<-round(mean(item_y$N_SPECIES)+3*sd(item_y$N_SPECIES))
+  #threshold<-round(quantile(item_y$N_SPECIES, 0.75)+1.5*IQR(item_y$N_SPECIES))
+  
+  
+  if (is_uniform==F){
+    if ("max_species" %in% colnames(item_y)){
+      max_n_sp<-max(item_y$max_species)
+      min_n_sp<-min(item_y$N_SPECIES)
+      #print(item_y)
+      geom.sf<-geom_sf(data=item_y[which(item_y$N_SPECIES>0),][1,], aes(colour=max_species))
+      
+    }else{
+      max_n_sp<-max(item_y$N_SPECIES)
+      min_n_sp<-min(item_y$N_SPECIES)
+      geom.sf<-NULL
+    }
+    if (threshold>max_n_sp){
+      midpoint<-round(max_n_sp/2)
+      breakss<-c(min_n_sp, midpoint, max_n_sp)
+      labelss<-c("0", "", as.character(max_n_sp))
+    }else{
+      midpoint<-round(threshold/2)
+      breakss<-c(min_n_sp, midpoint, threshold)
+      labelss<-c("0", "", sprintf(">%d, up to %d", threshold, max_n_sp))
+    }
+    gradient_colors<-scale_color_gradient2(low  = "#4477AA", high="#EE6677",
+                                           mid = "#DDDDDD", midpoint=midpoint,
+                                           breaks=breakss, 
+                                           labels=labelss)
+    gradient_fill<-  scale_fill_gradient2(low  = "#4477AA", high="#EE6677",
+                                          mid = "#DDDDDD", midpoint=midpoint,
+                                          breaks=breakss, 
+                                          labels=labelss)
+  }else{
+    gradient_colors<-scale_color_gradient2(low  = "#4477AA", high="#4477AA",
+                                           mid = "#4477AA")
+  }
+  
+  
+  
+  p_asia<-ggplot(item_y, aes(color=N_SPECIES, fill=N_SPECIES)) +
+    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3")
+  
+  if (!is.null(geom.sf)){
+    p_asia<-p_asia+geom.sf
+  }
+  
+  p_asia<-  p_asia+geom_sf()+
+    gradient_colors+gradient_fill+
+    labs(color=legend_label, fill=legend_label)+
+    geom_ribbon(data=item_y_l, 
+                aes(xmin=N_SPECIES_fix-CI_N_SPECIES,
+                    xmax=N_SPECIES_fix+CI_N_SPECIES, 
+                    y=lat_band), color="white", fill="black", alpha=0.2)+
+    
+    geom_path(data=item_y_l, aes(x=N_SPECIES_fix, y=lat_band), 
+              position="identity", color="black")+
+    #xlim(-12e6, 12e6)+
+    ylim(-55, 80)+
+    theme(panel.grid.major = element_line(color = "#d4d4d4", 
+                                          linetype = "dashed", linewidth = 0.5), 
+          panel.background = element_rect(fill = "#FFFFFF"),
+          axis.title = element_blank(),
+          legend.position = c(0.1, 0.3),
+          legend.title = element_blank(),
+          plot.margin = margin(t = 0,  # Top margin
+                               r = 0,  # Right margin
+                               b = 0,  # Bottom margin
+                               l = 0))+
+    guides(linewidth = "none") 
+  if (with_label){
+    p_asia<-p_asia + ggtitle(sprintf("%s", label))
+  }
+  p_asia
+  
+}
+
 my_CI<-function(v, ci=0.95){
   cis<-Rmisc::CI(v, ci=ci)
   cis[2] - cis[3]
