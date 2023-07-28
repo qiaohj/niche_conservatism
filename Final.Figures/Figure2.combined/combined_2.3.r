@@ -29,6 +29,7 @@ p1<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_SPECIATION_SPECIES/1000,
   labs(x=x_label, y="net speciation")+
   guides(color=guide_legend(nrow=2,byrow=TRUE),
          linetype=guide_legend(nrow=2,byrow=TRUE))+
+  
   theme_bw()+
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
@@ -43,6 +44,7 @@ p2<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_EXTINCTION_SPECIES/1000,
   labs(x=x_label, y="net extinction")+
   guides(color=guide_legend(nrow=2,byrow=TRUE),
          linetype=guide_legend(nrow=2,byrow=TRUE))+
+  scale_y_continuous(breaks=c(0, 0.03, 0.06, 0.09))+
   theme_bw()+
   theme(axis.text.x = element_blank(),
         axis.title.x = element_blank(),
@@ -54,6 +56,7 @@ p3<-ggplot(d_se)+geom_line(aes(x=to/10, y=net_dr,
                                group=label))+
   scale_color_manual("Evolution scenario", values=evo_type_color)+
   scale_linetype_manual("Evolution scenario", values=evo_type_line)+
+  scale_y_continuous(breaks=seq(0.1, 0.4, by=0.1), labels=c("0.10", "0.20", "0.30", "0.40"))+
   guides(color=guide_legend(nrow=2,byrow=TRUE),
          linetype=guide_legend(nrow=2,byrow=TRUE))+
   labs(x=x_label, y="Net per capita diversification rate")+
@@ -186,9 +189,12 @@ df_result[p_label==""]$alternative<-"No sig diff"
 table(df_result$alternative)
 df_result$label<-gsub("-conservatism", "", df_result$label)
 df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
-p<-ggplot(df_result)+geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alternative), height=0.1)+
+df_result<-formatLabelX (df_result)
+p<-ggplot(df_result)+
+  geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alternative, width=0.2))+
   geom_vline(aes(xintercept=0), linetype=2, color="#444444")+
   geom_point(aes(y=label_x, x=diff, color=alternative), size=0.5)+
+  geom_text(aes(y=label_x, x=upr, label=p_label), hjust=0.5, vjust=-0.2, size=2)+
   scale_y_discrete(limits=rev)+
   facet_wrap(~type, scale="free_x", labeller = 
                labeller(type = type.labs), nrow=1, ncol=3)+

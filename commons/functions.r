@@ -126,6 +126,19 @@ evo_type_amp<-data.frame(type=c("conservatism",
              "random-asymmetrical"),
              amp=c(0.00, 0.01, 0.10, 0.50, 0.01, 0.10, 0.50, 0.01, 0.10, 0.50,
                    0.01, 0.01, 0.01))
+quantiles_95 <- function(x) {
+  r <- quantile(x, probs=c(0.05, 0.25, 0.5, 0.75, 0.95))
+  names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+  r
+}
+mean_CI <- function(x) {
+  ci<-my_CI(x)
+  mean<-mean(x, na.rm=T)
+  quantile <- quantile(x, probs=c(0.05, 0.95))
+  r<-c(quantile[1], mean-ci, mean, mean+ci, quantile[2])
+  names(r) <- c("ymin", "lower", "middle", "upper", "ymax")
+  r
+}
 
 format_evoType<-function(index){
   evo_type<-rep(evo_types[1], length(index))
@@ -395,7 +408,7 @@ create_fig<-function(item_y, label="", barwidth=10, with_label=T,
 }
 create_fig_map<-function(item_y, label="", barwidth=10, with_label=T, 
                          legend_label="", polygon=NULL, world=NULL,
-                         is_uniform=F){
+                         is_uniform=F, with_lat=T){
   if (is.null(polygon)){
     polygon<-readRDS("../Figures/Movie2.Example/polygon.rda")
   }
@@ -484,16 +497,18 @@ create_fig_map<-function(item_y, label="", barwidth=10, with_label=T,
   
   p_asia<-  p_asia+geom_sf()+
     gradient_colors+gradient_fill+
-    labs(color=legend_label, fill=legend_label)+
-    geom_ribbon(data=item_y_l, 
-                aes(xmin=N_SPECIES_fix-CI_N_SPECIES,
-                    xmax=N_SPECIES_fix+CI_N_SPECIES, 
-                    y=lat_band), color="white", fill="black", alpha=0.2)+
-    
-    geom_path(data=item_y_l, aes(x=N_SPECIES_fix, y=lat_band), 
-              position="identity", color="black")+
-    #xlim(-12e6, 12e6)+
-    ylim(-55, 80)+
+    labs(color=legend_label, fill=legend_label)
+  if (with_lat){
+    p_asia<-p_asia+geom_ribbon(data=item_y_l, 
+                               aes(xmin=N_SPECIES_fix-CI_N_SPECIES,
+                                   xmax=N_SPECIES_fix+CI_N_SPECIES, 
+                                   y=lat_band), color="white", fill="black", alpha=0.2)+
+      
+      geom_path(data=item_y_l, aes(x=N_SPECIES_fix, y=lat_band), 
+                position="identity", color="black")
+  }
+  #xlim(-12e6, 12e6)+
+  p_asia<-p_asia+ylim(-55, 80)+
     theme(panel.grid.major = element_line(color = "#d4d4d4", 
                                           linetype = "dashed", linewidth = 0.5), 
           panel.background = element_rect(fill = "#FFFFFF"),

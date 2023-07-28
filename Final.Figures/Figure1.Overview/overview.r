@@ -457,6 +457,9 @@ diversity_final$N_SPECIES<-round(diversity_final$mean_N_SPECIES)
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
 p.richness<-create_fig(diversity_final[group=="conservatism"], "Niche conservatism", 
                        with_label=T, legend_label="Species numbers")
+p.richness.map<-create_fig_map(diversity_final[group=="conservatism"], "Niche conservatism", 
+                       with_label=T, legend_label="Species numbers", with_lat = F)
+
 ggsave(p.richness, filename="../Figures/Figure1.Overview/species.richness.niche.conservatism.png",
        width=6, height=6, bg="white")
 
@@ -531,7 +534,7 @@ ggsave(p_seeds2_part, filename="../Figures/Figure1.Overview/seeds2_part.pdf", wi
 #p.richness
 #p_line
 pp1<-ggarrange(plotlist=list(p_seeds, p_env), ncol=2, nrow=1, widths=c(3, 1))
-pp2<-ggarrange(plotlist=list(p.richness, p_lat_band), ncol=2, nrow=1, widths=c(3, 1))
+pp2<-ggarrange(plotlist=list(p.richness.map, p_lat_band), ncol=2, nrow=1, widths=c(3, 1))
 pp<-ggarrange(plotlist=list(pp1, p_line, pp2), ncol=1, nrow=3, heights=c(2, 1, 2))
 ggsave(pp, filename="../Figures/Figure1.Overview/overview.png",
        width=12, height=12, bg="white")
