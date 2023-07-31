@@ -439,8 +439,10 @@ create_fig_map<-function(item_y, label="", barwidth=10, with_label=T,
   item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES
   item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix - min(item_y_l$N_SPECIES_fix)
   range<-max(item_y_l$N_SPECIES_fix) - min(item_y_l$N_SPECIES_fix)
-  item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix/range * 50
-  item_y_l$CI_N_SPECIES<-item_y_l$CI_N_SPECIES/range * 50
+  if (range>0){
+    item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix/range * 50
+    item_y_l$CI_N_SPECIES<-item_y_l$CI_N_SPECIES/range * 50
+  }
   item_y_l$N_SPECIES_fix<-item_y_l$N_SPECIES_fix+170
   item_y_l<-item_y_l[between(lat_band, -50, 70)]
   item_y_l$lat_band<-item_y_l$lat_band/120 * 135
@@ -477,10 +479,7 @@ create_fig_map<-function(item_y, label="", barwidth=10, with_label=T,
                                            mid = "#DDDDDD", midpoint=midpoint,
                                            breaks=breakss, 
                                            labels=labelss)
-    gradient_fill<-  scale_fill_gradient2(low  = "#4477AA", high="#EE6677",
-                                          mid = "#DDDDDD", midpoint=midpoint,
-                                          breaks=breakss, 
-                                          labels=labelss)
+    gradient_fill<-  scale_fill_gradient(guide="none")
   }else{
     gradient_colors<-scale_color_gradient2(low  = "#4477AA", high="#4477AA",
                                            mid = "#4477AA")
@@ -489,7 +488,9 @@ create_fig_map<-function(item_y, label="", barwidth=10, with_label=T,
   
   
   p_asia<-ggplot(item_y, aes(color=N_SPECIES, fill=N_SPECIES)) +
-    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3")
+    geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3")+
+    geom_line(data=data.frame(x=c(-180, 180), y=0, N_SPECIES=0),
+              aes(x=x, y=y), color="grey", linetype=2, linewidth=0.5)
   
   if (!is.null(geom.sf)){
     p_asia<-p_asia+geom.sf
@@ -509,8 +510,8 @@ create_fig_map<-function(item_y, label="", barwidth=10, with_label=T,
   }
   #xlim(-12e6, 12e6)+
   p_asia<-p_asia+ylim(-55, 80)+
-    theme(panel.grid.major = element_line(color = "#d4d4d4", 
-                                          linetype = "dashed", linewidth = 0.5), 
+    theme(#panel.grid.major = element_line(color = "#d4d4d4", 
+          #                                linetype = "dashed", linewidth = 0.5), 
           panel.background = element_rect(fill = "#FFFFFF"),
           axis.title = element_blank(),
           legend.position = c(0.1, 0.3),

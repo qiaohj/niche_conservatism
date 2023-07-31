@@ -127,21 +127,24 @@ df_list<-readRDS("../Data/Example/dis.rda")
 tree_list<-readRDS("../Data/Example/tree.rda")
 n<-names(df_list)[1]
 i=349
-types<-c("conservatism", "shift-directional (0.1)", "expansion-directional (0.1)","expansion-omnidirectional (0.1)",
-         "shift-directional (0.5)", "expansion-directional (0.5)",  "expansion-omnidirectional (0.5)",
-         "random-central", "random-symmetrical", "random-asymmetrical")
-for (i in c(max(df$year):min(df$year))){
+types<-c("conservatism", 
+         "shift-directional (0.1)", "shift-directional (0.5)",
+         "random-central", "random-symmetrical", "random-asymmetrical",
+         "expansion-directional (0.1)", "expansion-directional (0.5)", 
+         "expansion-omnidirectional (0.1)","expansion-omnidirectional (0.5)"
+         )
+for (i in c(max(df_list[[1]]$year):min(df_list[[1]]$year))){
   plist<-list()
   print(i)
-  for (n in types){
+  for (n in c(1:length(types))){
     print(n)
-    df_item<-df_list[[n]]
-    title<-sprintf("%s", trimws(gsub(target, "", n)))
-    if (n==types[1]){
-      titletheme<-theme(legend.position = "none")
-      title<-sprintf("%.1fk YBP %s", i/10, n)
+    df_item<-df_list[[types[n]]]
+    title<-sprintf("%s", trimws(gsub(target, "", evo_types_label_line[n])))
+    if (types[n]==types[1]){
+      titletheme<-theme(legend.position = "none", plot.title = element_text(size = 12))
+      title_y<-sprintf("%.1f %s", i/10, x_label)
     }else{
-      titletheme<-theme(legend.position = "none", plot.title = element_text(size = 8))
+      titletheme<-theme(legend.position = "none", plot.title = element_text(size = 6))
     }
     
     
@@ -165,6 +168,8 @@ for (i in c(max(df$year):min(df$year))){
   
   pp1<-ggarrange(plist[[1]], ggarrange(plotlist=plist[c(2:10)], nrow=3, ncol=3),
                  widths = c(1,1), align = "v")
+  pp1<-annotate_figure(pp1, top = text_grob(title_y, face = "bold", size = 14))
+  
   ggsave(pp1, filename=sprintf("../Figures/Movie2.Example/all_scenarios/%d.png", i),
          width=10.5, height=6, bg="white")
 }
