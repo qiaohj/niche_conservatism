@@ -442,6 +442,43 @@ p_seeds<-annotate_figure(p_seeds, top = "Seed cells")
 ggsave(p_seeds, filename="../Figures/Figure1.Overview/seeds.pdf", width=12, height=6, bg="white")
 ggsave(p_seeds, filename="../Figures/Figure1.Overview/seeds.png", width=12, height=6, bg="white")
 
+#species richness at the beginning
+diversity_initial_details<-readRDS("../Data/diversity/diversity_all_initial_year.rda")
+diversity_initial<-diversity_initial_details[, .(N_SPECIES=length(unique(seed_id))),
+                                     by=list(global_id)]
+p.richness.initial<-create_fig(diversity_initial, "Potential species richness at the beginning of the simulation", 
+                       with_label=T, legend_label="Species numbers")
+ggsave(p.richness.initial, filename="../Figures/Figure1.Overview/species.richness.initial.png",
+       width=6, height=6, bg="white")
+
+ll<-readRDS("../Data/mask_lonlat.rda")
+diversity_initial_details<-merge(diversity_initial_details, ll, by="global_id")
+
+diversity_initial_details$lat_band<-round(diversity_initial_details$lat/5) * 5
+diversity_initial_lat<-diversity_initial_details[, .(N_SPECIES=length(unique(seed_id))),
+                                                 by=list(lat_band)]
+diversity_initial_lat$N_SPECIES_scaled<-diversity_initial_lat$N_SPECIES/max(diversity_initial_lat$N_SPECIES)
+setorder(diversity_initial_lat, "lat_band")
+p_lat_band_initial<-ggplot(diversity_initial_lat)+
+  
+  #geom_point(aes(x=N_Species, y=mid, color=label))+
+  #geom_ribbon(aes(xmin=mean_N_SPECIES_scaled-CI_mean_N_SPECIES_scaled,
+  #                xmax=mean_N_SPECIES_scaled+CI_mean_N_SPECIES_scaled, 
+  #                y=lat_band, fill=group), alpha=0.2)+
+  
+  geom_path(aes(x=N_SPECIES_scaled, y=lat_band), position="identity")+
+  #geom_errorbarh(aes(xmin=N_Species-N_Species_SD, xmax=N_Species+N_Species_SD, y=mid))+
+  theme_bw()+
+  labs(x="Scaled species diversity", y="Latitudinal band", color="",
+       fill="")+
+  #scale_color_manual(values=c("black", colorBlindGrey8[2:4]))+
+  #scale_x_continuous(breaks=c(500, 1000, 1500, 2000), labels=c(500, 1000, 1500, 2000))+
+  xlim(0.45, 1)+
+  ylim(-50, 70)+
+  theme(legend.position = c(0.7, 0.7),
+        #axis.title.x = element_blank(),
+        plot.margin = unit(c(0.01, 0, 0, 0.01), "null"))
+
 #species richness
 
 diversity_final<-readRDS("../Data/diversity/diversity_bootstrap.rda")
@@ -534,10 +571,11 @@ ggsave(p_seeds2_part, filename="../Figures/Figure1.Overview/seeds2_part.pdf", wi
 #p.richness
 #p_line
 pp1<-ggarrange(plotlist=list(p_seeds, p_env), ncol=2, nrow=1, widths=c(3, 1))
-pp2<-ggarrange(plotlist=list(p.richness.map, p_lat_band), ncol=2, nrow=1, widths=c(3, 1))
-pp<-ggarrange(plotlist=list(pp1, p_line, pp2), ncol=1, nrow=3, heights=c(2, 1, 2))
+pp1.5<-ggarrange(plotlist=list(p.richness.initial, p_lat_band_initial), ncol=2, nrow=1, widths=c(3, 1))
+pp2<-ggarrange(plotlist=list(p.richness, p_lat_band), ncol=2, nrow=1, widths=c(3, 1))
+pp<-ggarrange(plotlist=list(pp1, p_line, pp1.5, pp2), ncol=1, nrow=4, heights=c(2, 1, 2, 2))
 ggsave(pp, filename="../Figures/Figure1.Overview/overview.png",
-       width=12, height=12, bg="white")
+       width=12, height=14, bg="white")
 
 
 ggsave(pp, filename="../Figures/Figure1.Overview/overview.pdf",

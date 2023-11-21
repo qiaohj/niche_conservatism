@@ -193,6 +193,25 @@ t.test_my<-function(var, items, altern, com){
   com[p_value<0.001]$p_label<-"***"
   com
 }
+
+
+t.test_my2<-function(item1, item2, altern, com){
+  
+  t.test<-t.test(item1, 
+                 item2, 
+                 paired=T, 
+                 alternative=altern)
+  p_value<-t.test$p.value
+  
+  
+  com$p_value<-p_value
+  com$alternative<-altern
+  com$p_label<-""
+  com[p_value<0.05]$p_label<-"*"
+  com[p_value<0.01]$p_label<-"**"
+  com[p_value<0.001]$p_label<-"***"
+  com
+}
 TukeyHSD_B<-function(var, df, tested_label="conservatism"){
   plant.lm <- lm(as.formula(sprintf("%s ~ label", var)), data = df)
   plant.av <- aov(plant.lm)

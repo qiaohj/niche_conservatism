@@ -67,8 +67,8 @@ ggsave(p_boxplot, filename="../Figures/Figure2.Combined.No2/item2.png")
 
 
 df_result<-readRDS("../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")
-df_result$label<-gsub("-conservatism", "", df_result_list$label)
-df_result<-formatLabelX(df_result_list)
+df_result$label<-gsub("-conservatism", "", df_result$label)
+df_result<-formatLabelX(df_result)
 df_result<-df_result[is.na(NB) & is.na(DA)]
 
 df_result<-df_result[type!="N_SPECIES"]
@@ -329,16 +329,32 @@ for (i in c(1:length(lines))){
     geom_ribbon(data=shadows[[i]], aes(x=x, ymin=ymin, ymax=ymax), fill=type, alpha=0.5)+
     geom_path(data=lines[[i]], aes(x=x, y=y), color=type, linewidth=0.5)+
     geom_line(data=env_curve, aes(x=fixed_year, y=fixed_mean_v), linewidth=0.5, color="white")+
-    labs(x=names(evo_type_line)[i])+
-    theme(axis.title.y = element_blank(),
-          axis.title.x=element_text(size=9.9),
-          axis.text = element_blank(),
-          #panel.grid.major = element_blank(), 
-          #panel.grid.minor = element_blank(),
-          panel.border = element_rect(color="grey", fill=NA),
-          panel.background = element_blank(),
-          axis.ticks = element_blank()
-          )
+    labs(title=names(evo_type_line)[i])+
+    scale_x_continuous(breaks=range(shadows[[i]]$x), labels=c("120kyr", "0kyr"))
+  if (i<=5){
+    p3<-p3+theme(axis.title.y = element_blank(),
+                 axis.title.x=element_blank(),
+                 axis.text = element_blank(),
+                 #panel.grid.major = element_blank(), 
+                 #panel.grid.minor = element_blank(),
+                 panel.border = element_rect(color="grey", fill=NA),
+                 panel.background = element_blank(),
+                 plot.title = element_text(hjust = 0.5, size=9),
+                 axis.ticks.y = element_blank()
+    )
+  }else{
+    p3<-p3+theme(axis.title.y = element_blank(),
+                 axis.title.x=element_blank(),
+                 axis.text.y = element_blank(),
+                 #panel.grid.major = element_blank(), 
+                 #panel.grid.minor = element_blank(),
+                 panel.border = element_rect(color="grey", fill=NA),
+                 panel.background = element_blank(),
+                 plot.title = element_text(hjust = 0.5, size=9),
+                 axis.ticks.y = element_blank()
+    )
+  }
+    
   
   plist[[length(plist)+1]]<-p1
   plist2[[length(plist2)+1]]<-p2
@@ -348,7 +364,13 @@ for (i in c(1:length(lines))){
 #p<-ggarrange(plotlist=c(plist, plist2, plist_g2), nrow=3, ncol=10)
 
 p_symbol<-ggarrange(plotlist=plist_g2, nrow=2, ncol=5)
-p_all<-ggarrange(plotlist=list(p_symbol, p_boxplot, p_tukey), nrow=3, ncol=1, heights = c(0.8, 1.2, 1),
+p_symbol<-annotate_figure(p_symbol,
+                left = text_grob("niche change", 
+                                size = 10, face = "bold", rot=90))
+
+
+p_all<-ggarrange(plotlist=list(p_symbol, p_boxplot, p_tukey), 
+                 nrow=3, ncol=1, heights = c(0.8, 1.2, 1),
                  labels=c("a", "b", "c"))
 
 ggsave(p_all, filename="../Figures/Figure2.Combined.No2/Figure2.combined.No2.pdf",

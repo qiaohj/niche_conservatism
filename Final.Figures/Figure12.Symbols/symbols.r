@@ -176,6 +176,7 @@ for (i in c(1:nrow(species_evo_types))){
 plist<-list()
 plist2<-list()
 plist_g2<-list()
+i=1
 for (i in c(1:length(lines))){
   
   type<-evo_type_color[i]
@@ -210,7 +211,7 @@ for (i in c(1:length(lines))){
     geom_ribbon(data=shadows[[i]], aes(x=x, ymin=ymin, ymax=ymax), fill=type, alpha=0.5)+
     geom_path(data=lines[[i]], aes(x=x, y=y), color=type, linewidth=0.5)+
     geom_line(data=env_curve, aes(x=fixed_year, y=fixed_mean_v), linewidth=0.5, color="white")+
-    theme(axis.title = element_blank(),
+    theme(#axis.title = element_blank(),
           axis.text = element_blank(),
           panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(),

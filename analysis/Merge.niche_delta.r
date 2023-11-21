@@ -138,6 +138,8 @@ if (F){
     df_full_outliers[species_evo_type==7]$directional_speed
   
   df_full_outliers$delta_centra<-(df_full_outliers$delta_upper_limit+df_full_outliers$delta_lower_limit)/2
+  saveRDS(df_full_outliers, "../Data/niche_traits/niche_delta_raw.rda")
+  
   df_full_outliers_se_nb_da<-df_full_outliers[, .(delta_lower_limit=mean(delta_lower_limit), 
                                             delta_lower_limit_sd=sd(delta_lower_limit),
                                             delta_upper_limit=mean(delta_upper_limit), 
