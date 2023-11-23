@@ -22,6 +22,8 @@ if (F){
   saveRDS(df_full_outliers_se_nb_da, "../Data/niche_traits/niche_delta_nb_da.rda")
   saveRDS(df_full_outliers_se_da, "../Data/niche_traits/niche_delta_da.rda")
   saveRDS(df_full_outliers_se_da2, "../Data/niche_traits/niche_delta_da2.rda")
+  df_full_outliers_last<-df_full_outliers[year==1200]
+  saveRDS(df_full_outliers_last, "../Data/niche_traits/niche_breadth_last.rda")
 }
 df_full_outliers_se_nb_da<-readRDS("../Data/niche_traits/niche_delta_nb_da_delta_abs.rda")
 df_full_outliers_se_da<-readRDS("../Data/niche_traits/niche_delta_da.rda")

@@ -339,7 +339,7 @@ for (i in c(1:length(lines))){
                  #panel.grid.minor = element_blank(),
                  panel.border = element_rect(color="grey", fill=NA),
                  panel.background = element_blank(),
-                 plot.title = element_text(hjust = 0.5, size=9),
+                 plot.title = element_text(hjust = 0.5, size=9, vjust=-1),
                  axis.ticks.y = element_blank()
     )
   }else{
@@ -350,7 +350,7 @@ for (i in c(1:length(lines))){
                  #panel.grid.minor = element_blank(),
                  panel.border = element_rect(color="grey", fill=NA),
                  panel.background = element_blank(),
-                 plot.title = element_text(hjust = 0.5, size=9),
+                 plot.title = element_text(hjust = 0.5, size=9, vjust=-1),
                  axis.ticks.y = element_blank()
     )
   }
@@ -366,7 +366,7 @@ for (i in c(1:length(lines))){
 p_symbol<-ggarrange(plotlist=plist_g2, nrow=2, ncol=5)
 p_symbol<-annotate_figure(p_symbol,
                 left = text_grob("niche change", 
-                                size = 10, face = "bold", rot=90))
+                                size = 10, rot=90, vjust=1.5))
 
 
 p_all<-ggarrange(plotlist=list(p_symbol, p_boxplot, p_tukey), 
