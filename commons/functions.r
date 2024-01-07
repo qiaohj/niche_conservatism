@@ -230,6 +230,7 @@ TukeyHSD_B<-function(var, df, tested_label="conservatism"){
   tukey.test.df[p_adj<0.01]$p_label<-"**"
   tukey.test.df[p_adj<0.001]$p_label<-"***"
   tukey.test.df$type<-var
+  tukey.test.df$N<-nrow(df)
   tukey.test.df
 }
 

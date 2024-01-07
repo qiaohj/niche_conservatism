@@ -94,6 +94,10 @@ for (i in c(1:nrow(coms))){
   
   table(df_result$alternative)
   df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
+  fwrite(df_result[, c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
+         sprintf("../Figures/Figure9.Tukey.Test.10.vs.50/TukeyHSD_10.vs.50_%s_%s.csv", 
+                 com$nb, com$da))
+  
   p<-ggplot(df_result)+geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alternative), height=0.1)+
     geom_vline(aes(xintercept=0), linetype=2, color="#444444")+
     geom_point(aes(y=label_x, x=diff, color=alternative), size=0.5)+

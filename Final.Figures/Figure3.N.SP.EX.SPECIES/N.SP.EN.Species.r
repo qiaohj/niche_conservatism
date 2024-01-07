@@ -32,7 +32,8 @@ if (F){
                       sd_N_EXTINCTION=sd(N_EXTINCTION),
                       CI_N_SPECIES=my_CI(N_SPECIES),
                       CI_N_SPECIATION=my_CI(N_SPECIATION),
-                      CI_N_EXTINCTION=my_CI(N_EXTINCTION)
+                      CI_N_EXTINCTION=my_CI(N_EXTINCTION),
+                      N=.N
                       
                       
   ),
@@ -52,7 +53,8 @@ if (F){
                       sd_N_EXTINCTION=sd(N_EXTINCTION),
                       CI_N_SPECIES=my_CI(N_SPECIES),
                       CI_N_SPECIATION=my_CI(N_SPECIATION),
-                      CI_N_EXTINCTION=my_CI(N_EXTINCTION)
+                      CI_N_EXTINCTION=my_CI(N_EXTINCTION),
+                      N=.N
                       
                       
   ),
@@ -114,7 +116,7 @@ p2<-ggplot(d_se_all, aes(x=label_x, y=N_EXTINCTION))+
         axis.text.x = element_blank())
 p2
 
-
+unique(d_se_all[, c("da", "nb", "N")])
 p3<-ggplot(d_se_all, aes(x=label_x, y=N_SPECIES))+
   geom_errorbar(aes(color=nb, width=0.3, fill=da,
                     ymin=N_SPECIES-CI_N_SPECIES, 

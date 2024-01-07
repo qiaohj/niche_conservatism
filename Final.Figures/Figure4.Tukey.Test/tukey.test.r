@@ -76,6 +76,7 @@ if (F){
     
   }
   df_result_list<-rbindlist(df_result_list)
+  unique(df_result_list[, c("N", "NB", "DA")])
   saveRDS(df_result_list, "../Figures/Figure4.Tukey.Test/TukeyHSD_by_species.rda")
   write.csv(df_result_list, "../Figures/Figure4.Tukey.Test/TukeyHSD_by_species.csv", row.names = F)
 }
@@ -84,6 +85,13 @@ i=1
 df_result_list<-readRDS("../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")
 df_result_list$label<-gsub("-conservatism", "", df_result_list$label)
 df_result_list<-formatLabelX(df_result_list)
+fwrite(df_result_list[is.na(NB) & is.na(DA), 
+                            c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
+             "../Figures/Figure4.Tukey.Test/Table.Fig.s7.csv")
+fwrite(df_result_list[!is.na(NB) & !is.na(DA), 
+                      c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
+       "../Figures/Figure4.Tukey.Test/Table.Fig.s6.csv")
+
 for (i in c(1:nrow(coms))){
   com<-coms[i]
   print(i)

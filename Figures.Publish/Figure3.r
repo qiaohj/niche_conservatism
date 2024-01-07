@@ -21,25 +21,26 @@ item_e<-item
 
 
 N_item<-item_e[, .(N=.N),
-                        by=list(label_x)]
+               by=list(label_x)]
 
 item_extinction<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
-                            N=.N,
+                            #N=.N,
                             label="R_EXTINCTION_SPECIES"),
-                by=list(from, label_x, label_line)]
+                        by=list(from, label_x, label_line)]
 item_speciation<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
-                            N=.N,
+                            #N=.N,
                             label="R_SPECIATION_SPECIES"),
                         by=list(from, label_x, label_line)]
 item_ndr<-item_e[, .(v=mean(net_dr),
-                     N=.N,
-                            label="net_dr"),
-                        by=list(from, label_x, label_line)]
+                     #N=.N,
+                     label="net_dr"),
+                 by=list(from, label_x, label_line)]
 item_sd<-rbindlist(list(item_ndr, item_speciation, item_extinction))
 type.labs <- c("net_dr"= "net per capita diversification rate",
                "R_EXTINCTION_SPECIES"=  "net extinction",
                "R_SPECIATION_SPECIES" ="net speciation")
 table(item_e$label)
+
 p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line))+ 
   
   #ggdist::stat_halfeye(
@@ -72,7 +73,8 @@ p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line
                labeller(label = type.labs), nrow=1, ncol=3)
 
 mean_CI(item_e$R_EXTINCTION_SPECIES)
-ggsave(p_boxplot, filename="../Figures/Figure2.Combined.No2/item2.png")
+fwrite(item_sd, "../Figures.Publish/Figure3/Figure.3b.csv")
+ggsave(p_boxplot, filename="../Figures.Publish/Figure3/Figure.3b.pdf")
 
 
 df_result<-readRDS("../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")
@@ -103,7 +105,8 @@ df_result$label<-gsub("-conservatism", "", df_result$label)
 df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
 df_result<-formatLabelX (df_result)
 
-fwrite(df_result[, c("diff", "lwr", "upr", "p_adj", "label_x", "type")], "../Figures/Figure2.Combined.No2/Table.Fig.3c.csv")
+fwrite(df_result[, c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
+       "../Figures.Publish/Figure3/Figure.3c.csv")
 p_tukey<-ggplot(df_result)+
   geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alternative, width=0.2))+
   geom_vline(aes(xintercept=0), linetype=2, color="#444444")+
@@ -133,6 +136,7 @@ p_tukey<-ggplot(df_result)+
 
 #scale_x_discrete(guide = guide_axis(n.dodge = 2))
 p_tukey
+ggsave(p_tukey, filename="../Figures.Publish/Figure3/Figure.3c.pdf")
 
 env_curve<-readRDS("../Figures/Figure1.Overview/Data/env_yearly_avg.rda")
 env_curve<-env_curve[var=="Debiased_Minimum_Monthly_Temperature"]
@@ -170,7 +174,7 @@ lines<-list(line1)
 shadows<-list(shadow1)
 i=2
 for (i in c(1:nrow(species_evo_types))){
-
+  
   nb<-readRDS(sprintf(
     "/media/huijieqiao/QNAS/Niche_Conservatism/Results/27464_GOOD_NARROW_%d_%s_0/27464_GOOD_NARROW_%d_%s_0.niche_traits.rda",
     species_evo_types[i]$species_evo_type, as.character(species_evo_types[i]$directional_speed),
@@ -288,13 +292,13 @@ for (i in c(1:nrow(species_evo_types))){
   
   if (F){
     print(ggplot()+
-      geom_polygon(data=points, aes(x=x, y=y), fill=type<-evo_type_color[i+1])+
-      geom_ribbon(data=shadow2_1, aes(x=x, ymin=ymin, ymax=ymax), fill="white")+
-      geom_path(data=line2_1, aes(x=x, y=y), color=type<-evo_type_color[i+1], linewidth=0.5)+
-      geom_line(data=env_curve, aes(x=fixed_year, y=fixed_mean_v), linetype=2, linewidth=0.5, color="#CC3311")+
-      ggtitle(sprintf("%d %s", 
-                      species_evo_types[i]$species_evo_type, 
-                      species_evo_types[i]$directional_speed)))
+            geom_polygon(data=points, aes(x=x, y=y), fill=type<-evo_type_color[i+1])+
+            geom_ribbon(data=shadow2_1, aes(x=x, ymin=ymin, ymax=ymax), fill="white")+
+            geom_path(data=line2_1, aes(x=x, y=y), color=type<-evo_type_color[i+1], linewidth=0.5)+
+            geom_line(data=env_curve, aes(x=fixed_year, y=fixed_mean_v), linetype=2, linewidth=0.5, color="#CC3311")+
+            ggtitle(sprintf("%d %s", 
+                            species_evo_types[i]$species_evo_type, 
+                            species_evo_types[i]$directional_speed)))
   }
   
   lines[[length(lines)+1]]<-line2_1
@@ -365,7 +369,7 @@ for (i in c(1:length(lines))){
                  axis.ticks.y = element_blank()
     )
   }
-    
+  
   
   plist[[length(plist)+1]]<-p1
   plist2[[length(plist2)+1]]<-p2
@@ -376,14 +380,14 @@ for (i in c(1:length(lines))){
 
 p_symbol<-ggarrange(plotlist=plist_g2, nrow=2, ncol=5)
 p_symbol<-annotate_figure(p_symbol,
-                left = text_grob("niche change", 
-                                size = 10, rot=90, vjust=1.5))
+                          left = text_grob("niche change", 
+                                           size = 10, rot=90, vjust=1.5))
 
 
 p_all<-ggarrange(plotlist=list(p_symbol, p_boxplot, p_tukey), 
                  nrow=3, ncol=1, heights = c(0.8, 1.2, 1),
                  labels=c("a", "b", "c"))
 
-ggsave(p_all, filename="../Figures/Figure2.Combined.No2/Figure2.combined.No2.pdf",
+ggsave(p_all, filename="../Figures.Publish/Figure3/Figure.3.pdf",
        width=12.5, height=9)
 

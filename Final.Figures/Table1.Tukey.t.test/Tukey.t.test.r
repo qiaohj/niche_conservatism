@@ -61,7 +61,7 @@ for (i in c(1:nrow(coms))){
 }
 
 
-
+i=1
 for (i in c(1:nrow(coms))){
   com<-coms[i]
   print(i)
@@ -99,10 +99,13 @@ for (i in c(1:nrow(coms))){
   
   t.test.item<-t.test.item[, c("type.labs", "label_line", "p_value", "side")]
   setorderv(t.test.item, cols=c("type.labs", "label_line"))
+  fwrite(t.test.item, sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s.csv", 
+                 com$nb, com$da))
   my_table<-nice_table(t.test.item, 
                        title=c("Paired Samples T-test", title2),
                        stars=T,
                        col.format.p=3)
   flextable::save_as_docx(my_table, path = 
-                            sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s.docx", com$nb, com$da))
+                            sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s.docx", 
+                                    com$nb, com$da))
 }
