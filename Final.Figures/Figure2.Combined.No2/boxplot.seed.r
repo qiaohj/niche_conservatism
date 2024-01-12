@@ -18,40 +18,48 @@ item[net_dr==-1]
 range(item$R_SPECIATION_SPECIES)
 item_e<-item[R_EXTINCTION_SPECIES>0]
 item_e<-item
-item_e<-item_e[from %in% seq(-1000, -100, by=100)]
+
 
 N_item<-item_e[, .(N=.N),
                by=list(label_x)]
 
-item_extinction<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
+item_extinction_year<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
                             N=.N,
                             label="R_EXTINCTION_SPECIES"),
                         by=list(from, label_x, label_line)]
-item_speciation<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
+item_extinction_seed<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
+                                 N=.N,
+                                 label="R_EXTINCTION_SPECIES"),
+                             by=list(global_id, nb, da, label_x, label_line)]
+
+item_speciation_year<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
                             N=.N,
                             label="R_SPECIATION_SPECIES"),
                         by=list(from, label_x, label_line)]
-item_ndr<-item_e[, .(v=mean(net_dr),
+item_speciation_seed<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
+                                 N=.N,
+                                 label="R_SPECIATION_SPECIES"),
+                             by=list(global_id, nb, da, label_x, label_line)]
+
+item_ndr_year<-item_e[, .(v=mean(net_dr),
                      N=.N,
                      label="net_dr"),
                  by=list(from, label_x, label_line)]
+item_ndr_seed<-item_e[, .(v=mean(net_dr),
+                          N=.N,
+                          label="net_dr"),
+                      by=list(global_id, nb, da, label_x, label_line)]
+item_ndr_year$range<-"YEAR"
+item_ndr_seed$range<-"SEED"
 
+item_speciation_year$range<-"YEAR"
+item_speciation_seed$range<-"SEED"
 
-item_extinction<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
-                            N=.N,
-                            label="R_EXTINCTION_SPECIES"),
-                        by=list(from, label_x, label_line, da, nb)]
-item_speciation<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
-                            N=.N,
-                            label="R_SPECIATION_SPECIES"),
-                        by=list(from, label_x, label_line, da, nb)]
-item_ndr<-item_e[, .(v=mean(net_dr),
-                     N=.N,
-                     label="net_dr"),
-                 by=list(from, label_x, label_line, da, nb)]
+item_extinction_year$range<-"YEAR"
+item_extinction_seed$range<-"SEED"
 
-
-item_sd<-rbindlist(list(item_ndr, item_speciation, item_extinction))
+item_sd<-rbindlist(list(item_ndr_year, item_speciation_year, item_extinction_year,
+                        item_ndr_seed, item_speciation_seed, item_extinction_seed), fill=T)
 type.labs <- c("net_dr"= "net per capita diversification rate",
                "R_EXTINCTION_SPECIES"=  "net extinction",
                "R_SPECIATION_SPECIES" ="net speciation")
@@ -84,11 +92,11 @@ p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line
         axis.title.x = element_blank(),
         panel.spacing.x = unit(5, "mm"),
         strip.text = element_text(size=12))+
-  facet_wrap(~label, scale="free_x", labeller = 
-               labeller(label = type.labs), nrow=1, ncol=3)
+  facet_wrap(label~range, scale="free_x", labeller = 
+               labeller(label = type.labs), nrow=3, ncol = 2)
 
 mean_CI(item_e$R_EXTINCTION_SPECIES)
-ggsave(p_boxplot, filename="../Figures/Figure2.Combined.No2/item2.2.png")
+ggsave(p_boxplot, filename="../Figures/Figure2.Combined.No2/item2_all.png", width=8, height=12)
 
 
 df_result<-readRDS("../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")

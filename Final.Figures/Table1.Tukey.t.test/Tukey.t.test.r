@@ -65,7 +65,7 @@ i=1
 for (i in c(1:nrow(coms))){
   com<-coms[i]
   print(i)
-  t.test<-readRDS(sprintf("../Figures/Table1.Tukey.t.test/Data/t.test_by_species_%s_%s.rda", com$nb, com$da))
+  t.test<-readRDS(sprintf("../Figures/20230616/t.test/t.test_by_species_%s_%s_paired_fixed_window.rda", com$nb, com$da))
   colnames(t.test)[1]<-"label"
   t.test<-formatLabel_line(t.test)
   
@@ -88,7 +88,7 @@ for (i in c(1:nrow(coms))){
                  "R_SPECIATION_SPECIES" ="speciation rate")
   
   
-  t.test.item<-t.test.item[p_value<=0.05]
+  #t.test.item<-t.test.item[p_value<=0.05]
   t.test.item<-t.test.item[side!="two.sided"]
   
   t.test.item$type.labs<-type.labs[t.test.item$var]
@@ -99,13 +99,13 @@ for (i in c(1:nrow(coms))){
   
   t.test.item<-t.test.item[, c("type.labs", "label_line", "p_value", "side")]
   setorderv(t.test.item, cols=c("type.labs", "label_line"))
-  fwrite(t.test.item, sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s.csv", 
+  fwrite(t.test.item, sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s_paired_fixed_window.csv", 
                  com$nb, com$da))
   my_table<-nice_table(t.test.item, 
                        title=c("Paired Samples T-test", title2),
                        stars=T,
                        col.format.p=3)
   flextable::save_as_docx(my_table, path = 
-                            sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s.docx", 
+                            sprintf("../Figures/Table1.Tukey.t.test/t.test_%s_%s_fixed_window.docx", 
                                     com$nb, com$da))
 }

@@ -33,6 +33,7 @@ if (F){
 }
 
 d_with_null<-readRDS("../Data/distribution_traits/distribution_traits_se_without_nb_da_without_3SD_outliers_global_id_t.test.rda")
+var<-"N_CELLS"
 my.pairwise.t.test<-function(item, var, side){
   t.test<-pairwise.t.test(pull(item[, ..var]), 
                           item$label, 
@@ -56,7 +57,7 @@ var="N_GROUP"
 for (i in c(1:nrow(coms))){
   com<-coms[i]
   print(i)
-  item<-d_with_null[year>=-900]
+  item<-d_with_null[year>=-1000]
   if (!is.na(com$nb)){
     item<-item[nb==com$nb]
   }
@@ -95,7 +96,9 @@ for (i in c(1:nrow(coms))){
   df_result<-rbindlist(list(two.side.p.table.N_GROUP, 
                             less.t.test.N_GROUP, 
                             greater.t.test.N_GROUP))
-  
+  item_sum<-item[, .(N_CELLS=sum(N_CELLS),
+                     N_GROUP=sum(N_GROUP)),
+                 by=list(global_id, label)]
   tukey_N_CELLS<-TukeyHSD_B("N_CELLS", item, "")
   tukey_N_GROUP<-TukeyHSD_B("N_GROUP", item, "")
   saveRDS(tukey_N_CELLS, sprintf("../Figures/20230616/t.test/tukey_n.cells.by_species_distribution_%s_%s.rda", com$nb, com$da))

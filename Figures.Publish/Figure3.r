@@ -11,30 +11,33 @@ source("commons/functions.r")
 d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
 d<-formatLabels(d)
 item<-d[from>=-1000]
+item<-item[from %in% seq(from=-1000, to=-100, by=100)]
 item$net_dr
 colnames(item)
 dim(item)
 item[net_dr==-1]
 range(item$R_SPECIATION_SPECIES)
-item_e<-item[R_EXTINCTION_SPECIES>0]
+#item_e<-item[R_EXTINCTION_SPECIES>0]
 item_e<-item
 
 
 N_item<-item_e[, .(N=.N),
                by=list(label_x)]
+fwrite(N_item, "../Figures.Publish/Figure3/N.Figure.3.csv")
+
 
 item_extinction<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
                             #N=.N,
                             label="R_EXTINCTION_SPECIES"),
-                        by=list(from, label_x, label_line)]
+                        by=list(from, label_x, label_line, global_id, nb, da)]
 item_speciation<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
                             #N=.N,
                             label="R_SPECIATION_SPECIES"),
-                        by=list(from, label_x, label_line)]
+                        by=list(from, label_x, label_line, global_id, nb, da)]
 item_ndr<-item_e[, .(v=mean(net_dr),
                      #N=.N,
                      label="net_dr"),
-                 by=list(from, label_x, label_line)]
+                 by=list(from, label_x, label_line, global_id, nb, da)]
 item_sd<-rbindlist(list(item_ndr, item_speciation, item_extinction))
 type.labs <- c("net_dr"= "net per capita diversification rate",
                "R_EXTINCTION_SPECIES"=  "net extinction",
@@ -72,12 +75,12 @@ p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line
   facet_wrap(~label, scale="free_x", labeller = 
                labeller(label = type.labs), nrow=1, ncol=3)
 
-mean_CI(item_e$R_EXTINCTION_SPECIES)
+
 fwrite(item_sd, "../Figures.Publish/Figure3/Figure.3b.csv")
-ggsave(p_boxplot, filename="../Figures.Publish/Figure3/Figure.3b.pdf")
+ggsave(p_boxplot, filename="../Figures.Publish/Figure3/Figure.3b.png")
 
 
-df_result<-readRDS("../Figures/20230616/TukeyHSD/TukeyHSD_by_species.rda")
+df_result<-readRDS("../Figures/Figure4.Tukey.Test/TukeyHSD_by_species.fixed.window.rda")
 df_result$label<-gsub("-conservatism", "", df_result$label)
 df_result<-formatLabelX(df_result)
 df_result<-df_result[is.na(NB) & is.na(DA)]

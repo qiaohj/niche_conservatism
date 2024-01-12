@@ -6,6 +6,7 @@ library(corrplot)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
 if (F){
+  window_from<- -500
   d<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction_rolling_window.rda")
   
   d$outlier<-"F"
@@ -33,19 +34,19 @@ if (F){
   d$net_dr<-(d$N_SPECIES_END - d$N_SPECIES_BEGIN)/d$N_SPECIES_BEGIN
   d$net_dr_2<-d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES
   samp<-sample(nrow(d), 5e3)
-  plot(d[samp]$net_dr, d[samp]$R_SPECIATION_SPECIES - d[samp]$R_EXTINCTION_SPECIES)
-  cor(d$net_dr, d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)
+  #plot(d[samp]$net_dr, d[samp]$R_SPECIATION_SPECIES - d[samp]$R_EXTINCTION_SPECIES)
+  #cor(d$net_dr, d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)
   
-  saveRDS(d, "../Data/tslm_and_glm/d_ndr_200.rda")
-  d<-readRDS("../Data/tslm_and_glm/d_ndr_200.rda")
+  #saveRDS(d, "../Data/tslm_and_glm/d_ndr.rda")
+  #d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
   d_null<-d[species_evo_type==1]
   d_null<-d_null[, c("from", "to", "nb", "da", "global_id")]
   d_null$tag<-1
   d_with_null<-merge(d, d_null, 
                      by=c("from", "to", "nb", "da", "global_id"))
-  ggplot(d)+geom_histogram(aes(y=net_dr))+facet_wrap(~label)
-  cor(d$N_SPECIES, d$net_dr)
-  cor(d$N_SPECIES, d$N_SPECIATION)
+  #ggplot(d)+geom_histogram(aes(y=net_dr))+facet_wrap(~label)
+  #cor(d$N_SPECIES, d$net_dr)
+  #cor(d$N_SPECIES, d$N_SPECIATION)
   coms<-data.table(expand.grid(nb=c(NA, "BROAD", "NARROW"), da=c(NA, "GOOD", "POOR")))
   i=1
   df_result_list<-list()
@@ -64,7 +65,6 @@ if (F){
     
     if (F){
       plant.lm <- lm(as.formula(sprintf("%s ~ label", "net_dr")), data = item)
-      durbinWatsonTest(model)
       plant.av <- aov(plant.lm)
       summary(plant.av)
       
@@ -80,13 +80,49 @@ if (F){
       colnames(tukey.test.df)[4]<-"p_adj"
     }
     df_N_SPECIES<-TukeyHSD_B("N_SPECIES", item)
+    df_N_SPECIES_LAST<-TukeyHSD_B("N_SPECIES", item[from==window_from])
+    df_N_SPECIES_MEAN<-TukeyHSD_B("N_SPECIES", item[, .(N_SPECIES=mean(N_SPECIES)), by=list(label, global_id)])
+    
     df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", item)
+    df_R_SPECIATION_SPECIES_LAST<-TukeyHSD_B("R_SPECIATION_SPECIES", item[from==window_from])
+    df_R_SPECIATION_SPECIES_MEAN<-TukeyHSD_B("R_SPECIATION_SPECIES", item[, .(R_SPECIATION_SPECIES=mean(R_SPECIATION_SPECIES)), 
+                                                                          by=list(label, global_id)])
+    
     df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", item)
+    df_R_EXTINCTION_SPECIES_LAST<-TukeyHSD_B("R_EXTINCTION_SPECIES", item[from==window_from])
+    df_R_EXTINCTION_SPECIES_MEAN<-TukeyHSD_B("R_EXTINCTION_SPECIES", item[, .(R_EXTINCTION_SPECIES=mean(R_EXTINCTION_SPECIES)), 
+                                                                          by=list(label, global_id)])
+    
+    
     df_net_dr<-TukeyHSD_B("net_dr", item)
-    df_net_dr_2<-TukeyHSD_B("net_dr_2", item)
+    df_net_dr_LAST<-TukeyHSD_B("net_dr", item[from==window_from])
+    df_net_dr_MEAN<-TukeyHSD_B("net_dr", item[, .(net_dr=mean(net_dr)), 
+                                              by=list(label, global_id)])
+    
+    df_N_SPECIES$range<-"ALL"
+    df_R_SPECIATION_SPECIES$range<-"ALL"
+    df_R_EXTINCTION_SPECIES$range<-"ALL"
+    df_net_dr$range<-"ALL"
+    
+    df_N_SPECIES_LAST$range<-sprintf("%d-%d", abs(window_from), abs(window_from+100))
+    df_R_SPECIATION_SPECIES_LAST$range<-sprintf("%d-%d", abs(window_from), abs(window_from+100))
+    df_R_EXTINCTION_SPECIES_LAST$range<-sprintf("%d-%d", abs(window_from), abs(window_from+100))
+    df_net_dr_LAST$range<-sprintf("%d-%d", abs(window_from), abs(window_from+100))
+    
+    df_N_SPECIES_MEAN$range<-"MEAN"
+    df_R_SPECIATION_SPECIES_MEAN$range<-"MEAN"
+    df_R_EXTINCTION_SPECIES_MEAN$range<-"MEAN"
+    df_net_dr_MEAN$range<-"MEAN"
+    
     df_result<-rbindlist(list(df_net_dr, df_N_SPECIES,
                               df_R_SPECIATION_SPECIES, 
-                              df_R_EXTINCTION_SPECIES))
+                              df_R_EXTINCTION_SPECIES,
+                              df_net_dr_LAST, df_N_SPECIES_LAST,
+                              df_R_SPECIATION_SPECIES_LAST, 
+                              df_R_EXTINCTION_SPECIES_LAST,
+                              df_net_dr_MEAN, df_N_SPECIES_MEAN,
+                              df_R_SPECIATION_SPECIES_MEAN, 
+                              df_R_EXTINCTION_SPECIES_MEAN))
     df_result$diff_str<-round(df_result$diff, 3)
     df_result$NB<-com$nb
     df_result$DA<-com$da
@@ -95,14 +131,17 @@ if (F){
   }
   df_result_list<-rbindlist(df_result_list)
   unique(df_result_list[, c("N", "NB", "DA")])
-  saveRDS(df_result_list, "../Figures/Figure4.Tukey.Test/TukeyHSD_by_species_200.rda")
-  write.csv(df_result_list, "../Figures/Figure4.Tukey.Test/TukeyHSD_by_species_200.csv", row.names = F)
+  saveRDS(df_result_list, sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_by_species_mean_%d.rda", window_from))
+  write.csv(df_result_list, sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_by_species_mean_%d.csv", window_from),
+            row.names = F)
 }
 coms<-data.table(expand.grid(nb=c(NA, "BROAD", "NARROW"), da=c(NA, "GOOD", "POOR")))
 i=1
-df_result_list<-readRDS("../Figures/Figure4.Tukey.Test/TukeyHSD_by_species_200.rda")
+df_result_list<-readRDS(sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_by_species_mean_%d.rda", window_from))
 df_result_list$label<-gsub("-conservatism", "", df_result_list$label)
 df_result_list<-formatLabelX(df_result_list)
+
+
 for (i in c(1:nrow(coms))){
   com<-coms[i]
   print(i)
@@ -120,8 +159,8 @@ for (i in c(1:nrow(coms))){
   df_result<-df_result[type!="N_SPECIES"]
   unique(df_result$type)
   type.labs <- c("net_dr"= "net per capita diversification rate",
-                "R_EXTINCTION_SPECIES"=  "net extinction",
-                "R_SPECIATION_SPECIES" ="net speciation")
+                 "R_EXTINCTION_SPECIES"=  "net extinction",
+                 "R_SPECIATION_SPECIES" ="net speciation")
   
   df_result[type!="net_dr"]$diff <- df_result[type!="net_dr"]$diff/1000
   df_result[type!="net_dr"]$lwr <- df_result[type!="net_dr"]$lwr/1000
@@ -143,8 +182,8 @@ for (i in c(1:nrow(coms))){
     geom_point(aes(y=label_x, x=diff, color=alternative), size=0.5)+
     geom_text(aes(y=label_x, x=upr, label=p_label), hjust=0.5, vjust=-0.2, size=2)+
     scale_y_discrete(limits=rev)+
-    facet_wrap(~type, scale="free_x", labeller = 
-                 labeller(type = type.labs), nrow=1, ncol=3)+
+    facet_grid(range~type, scale="free", labeller = 
+                 labeller(type = type.labs))+
     scale_color_manual(values=c("#EE6677", "#000000", "#4477AA"), 
                        breaks=c("Greater", "No sig diff", "Less"))+
     theme_bw()+
@@ -162,14 +201,14 @@ for (i in c(1:nrow(coms))){
           axis.title.y = element_blank(),
           axis.title.x = element_blank(),
           panel.spacing.x = unit(8, "mm"))
-  
+   
   #scale_x_discrete(guide = guide_axis(n.dodge = 2))
   p
   
   
-  ggsave(p, filename=sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_%s_%s_200.png", com$nb, com$da),
-         width=12, height=3)
+  ggsave(p, filename=sprintf("../Figures/Figure4.Tukey.Test.all/TukeyHSD_%s_%s_%d.png", com$nb, com$da, abs(window_from)),
+         width=12, height=8)
   
-  ggsave(p, filename=sprintf("../Figures/Figure4.Tukey.Test/TukeyHSD_%s_%s_200.pdf", com$nb, com$da),
-         width=12, height=3)
+  ggsave(p, filename=sprintf("../Figures/Figure4.Tukey.Test.all/TukeyHSD_%s_%s_%d.pdf", com$nb, com$da, abs(window_from)),
+         width=12, height=8)
 }

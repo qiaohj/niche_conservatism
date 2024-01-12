@@ -63,6 +63,20 @@ if (F){
            by=list(year, species_evo_type, directional_speed, species_evo_level, global_id)]
   saveRDS(d_se2, "../Data/distribution_traits/distribution_traits_se_without_nb_da_without_3SD_outliers_global_id.rda")
   
+  
+  d_se2<-d[year>=-1000, .(N_CELLS=sum(N_CELLS),
+               #SD_N_CELLS=sd(N_CELLS),
+               #MIN_N_CELL=min(N_CELLS),
+               #MAX_N_CELL=max(N_CELLS),
+               N_GROUP=sum(N_GROUP)),
+               #SD_N_GROUP=sd(N_GROUP),
+               #MEDIAN_N_CELL=quantile(N_CELLS, 0.5),
+               #QUANTILE_25_NCELL=quantile(N_CELLS, 0.25),
+               #QUANTILE_75_NCELL=quantile(N_CELLS, 0.75)),
+           by=list(species_evo_type, directional_speed, species_evo_level, global_id, nb, da)]
+  saveRDS(d_se2, "../Data/distribution_traits/distribution_traits_se_without_3SD_outliers_global_id_nb_da.rda")
+  
+  
   d_se3<-d[, .(N_CELLS=mean(N_CELLS),
                SD_N_CELLS=sd(N_CELLS),
                MIN_N_CELL=min(N_CELLS),

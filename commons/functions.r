@@ -215,7 +215,7 @@ t.test_my2<-function(item1, item2, altern, com){
 TukeyHSD_B<-function(var, df, tested_label="conservatism"){
   plant.lm <- lm(as.formula(sprintf("%s ~ label", var)), data = df)
   plant.av <- aov(plant.lm)
-  summary(plant.av)
+  #summary(plant.av)
   tukey.test <- TukeyHSD(plant.av)
   #tukey.test
   #plot(tukey.test)

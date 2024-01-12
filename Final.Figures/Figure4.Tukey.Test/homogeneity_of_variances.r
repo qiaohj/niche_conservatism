@@ -3,41 +3,14 @@ library(data.table)
 library(randomForest)
 library(ggplot2)
 library(corrplot)
+library(car)
+library(pracma)
 setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
 if (F){
-  d<-readRDS("../Data/N_speciation_extinction/N_speciation_extinction_rolling_window.rda")
-  
-  d$outlier<-"F"
-  outliers<-readRDS("../Data/outliers/outliers_3SD.rda")
-  d[global_id %in% unique(outliers$global_id)]$outlier<-"T"
-  d<-d[outlier=="F"]
-  d<-d[((directional_speed %in% c(0) & species_evo_type==1) |
-          (directional_speed %in% c(0.1, 0.5) & species_evo_type %in% c(2, 3, 4)) |
-          (directional_speed %in% c(0.01) & species_evo_type %in% c(5, 6, 7)))]
-  
-  d$R_SPECIATION_SPECIES<-d$N_SPECIATION/d$N_SPECIES * 1000
-  d$R_EXTINCTION_SPECIES<-d$N_EXTINCTION/d$N_SPECIES * 1000
-  d<-d[!is.nan(R_SPECIATION_SPECIES)]
-  
-  d$evo_type<-format_evoType(d$species_evo_type)
-  d[, label:=format_evoLabel(evo_type, directional_speed), 
-    by=seq_len(nrow(d))]
-  labels<-unique(d$label)
+  d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
   
   
-  #d_final<-readRDS("../Data/tslm/d_N_Species_final.rda")
-  
-  d[N_SPECIES_BEGIN==0]
-  
-  d$net_dr<-(d$N_SPECIES_END - d$N_SPECIES_BEGIN)/d$N_SPECIES_BEGIN
-  d$net_dr_2<-d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES
-  samp<-sample(nrow(d), 5e3)
-  plot(d[samp]$net_dr, d[samp]$R_SPECIATION_SPECIES - d[samp]$R_EXTINCTION_SPECIES)
-  cor(d$net_dr, d$R_SPECIATION_SPECIES - d$R_EXTINCTION_SPECIES)
-  
-  saveRDS(d, "../Data/tslm_and_glm/d_ndr_200.rda")
-  d<-readRDS("../Data/tslm_and_glm/d_ndr_200.rda")
   d_null<-d[species_evo_type==1]
   d_null<-d_null[, c("from", "to", "nb", "da", "global_id")]
   d_null$tag<-1
@@ -53,6 +26,12 @@ if (F){
     com<-coms[i]
     print(i)
     item<-d[from>=-1000]
+    if (F){
+      d_sum<-item[, .(N_SPECIATION=sum(N_SPECIATION),
+                      to=min(to)), by=c("global_id", "nb", "da", "label")]
+      xx<-d_sum[N_SPECIATION==0]
+      table(xx$to)
+    }
     if (!is.na(com$nb)){
       item<-item[nb==com$nb]
     }
@@ -61,10 +40,17 @@ if (F){
     }
     
     item<-formatLabels(item)
-    
     if (F){
-      plant.lm <- lm(as.formula(sprintf("%s ~ label", "net_dr")), data = item)
-      durbinWatsonTest(model)
+      item_mean<-item[, .(net_dr=mean(net_dr)), by=list(label, global_id)]
+      item<-item[from %in% seq(-1000,-100, 100)]
+      item$net_dr_root3<-nthroot(item$net_dr, 3)
+      plant.lm <- lm(as.formula(sprintf("%s ~ label", "net_dr_root3")), data = item)
+      dw1<-durbinWatsonTest(plant.lm)
+      
+      plant.lm2 <- lm(as.formula(sprintf("%s ~ label", "net_dr")), data = item)
+      dw2<-durbinWatsonTest(plant.lm2)
+      
+      
       plant.av <- aov(plant.lm)
       summary(plant.av)
       
@@ -79,17 +65,46 @@ if (F){
       tukey.test.df$p_label<-""
       colnames(tukey.test.df)[4]<-"p_adj"
     }
-    df_N_SPECIES<-TukeyHSD_B("N_SPECIES", item)
-    df_R_SPECIATION_SPECIES<-TukeyHSD_B("R_SPECIATION_SPECIES", item)
-    df_R_EXTINCTION_SPECIES<-TukeyHSD_B("R_EXTINCTION_SPECIES", item)
-    df_net_dr<-TukeyHSD_B("net_dr", item)
-    df_net_dr_2<-TukeyHSD_B("net_dr_2", item)
-    df_result<-rbindlist(list(df_net_dr, df_N_SPECIES,
-                              df_R_SPECIATION_SPECIES, 
-                              df_R_EXTINCTION_SPECIES))
-    df_result$diff_str<-round(df_result$diff, 3)
-    df_result$NB<-com$nb
-    df_result$DA<-com$da
+    
+    labels<-unique(item$label)
+    item_N<-item[, .(N=.N), by=list(global_id, nb, da, from)]
+    item_merged<-merge(item, item_N, by=c("global_id", "nb", "da", "from"))
+    item_merged<-item_merged[N==10]
+    
+    table(item_merged$label)
+    #library(lme4)
+    
+    #model_lmer<-lmer(net_dr~label+(1|global_id)+(1|nb)+(1|da)+(1|from), data=item_merged)
+    
+    #model_lmer<-lmer(net_dr~label+(1|global_id)+(1|nb)+(1|da)+(1|from), data=item_merged)
+    
+    ll<-labels[1]
+    for (ll in labels){
+      item_item<-item_merged[label==ll & from %in% seq(-1000, -100, 100)]
+      item_item$run<-sprintf("%d-%s-%s", item_item$global_id, item_item$nb, item_item$da)
+      item_item_N<-item_item[, .(N=.N), by=list(global_id, nb, da, label, from)]
+      #model <- lm(as.formula(sprintf("%s ~ run", "net_dr")), data = item_item)
+      var<-"net_dr"
+      for (var in c("net_dr", "N_SPECIATION", "N_EXTINCTION")){
+        item_item_N<-item_item[, .(N=.N), by=list(run)]
+        item_item<-item_item[run %in% item_item_N[N>2]$run]
+        fligner.test(nthroot(pull(item_item[, ..var]), 3), item_item$run)
+        
+        fligner.test(pull(item_item[, ..var]), item_item$run)
+        
+        result_item<-data.table(chi.squared=obj$statistic,
+                                p.value=obj$p.value,
+                                Df=obj$parameter,
+                                group=ll,
+                                nb=com$nb,
+                                da=com$da)
+      }
+      #leveneTest(net_dr ~ run, data = item_item)
+      #bartlett.test(N_EXTINCTION ~ run, data = item_item)
+    }
+    
+    
+    
     df_result_list[[length(df_result_list)+1]]<-df_result
     
   }
@@ -120,8 +135,8 @@ for (i in c(1:nrow(coms))){
   df_result<-df_result[type!="N_SPECIES"]
   unique(df_result$type)
   type.labs <- c("net_dr"= "net per capita diversification rate",
-                "R_EXTINCTION_SPECIES"=  "net extinction",
-                "R_SPECIATION_SPECIES" ="net speciation")
+                 "R_EXTINCTION_SPECIES"=  "net extinction",
+                 "R_SPECIATION_SPECIES" ="net speciation")
   
   df_result[type!="net_dr"]$diff <- df_result[type!="net_dr"]$diff/1000
   df_result[type!="net_dr"]$lwr <- df_result[type!="net_dr"]$lwr/1000
