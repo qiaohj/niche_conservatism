@@ -222,8 +222,8 @@ p <- ggplot(v_tmax_mean, aes(x = year * -0.1))+
         axis.text.y.right = element_text(colour = "#4477AA"))
 
 p
-fwrite(v_tmax_mean, "../Figures.Publish/Figure2/Figure.2c.csv")
-ggsave(p, filename="../Figures.Publish/Figure2/Figure.2c.pdf", width=12, height=4)
+fwrite(v_tmax_mean, "../Figures.Publish/Data/Figure2/Figure.2c.csv")
+#ggsave(p, filename="../Figures.Publish/Figure2/Figure.2c.pdf", width=12, height=4)
 
 
 
@@ -260,7 +260,7 @@ mycol <- cool_warm(max_tmax - min_tmax + 1)
 polygon_tmax$color<-mycol[floor(polygon_tmax$v) - min_tmax + 1]
 
 #subcols<-mycol[c(min(polygon_max_temp$temp_int):max(polygon_max_temp$temp_int)) - min_tmax + 1]
-saveRDS(polygon_tmax, "../Figures.Publish/Figure2/Figure.2b1.rda")
+saveRDS(polygon_tmax, "../Figures.Publish/Data/Figure2/Figure.2b1.rda")
 
 p_asia_tmax<-ggplot(polygon_tmax, aes(colour=v)) +
   geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
@@ -303,7 +303,7 @@ mycol <- cool_warm(max_tmin - min_tmin + 1)
 polygon_tmin$color<-mycol[floor(polygon_tmin$v) - min_tmin + 1]
 
 #subcols<-mycol[c(min(polygon_max_temp$temp_int):max(polygon_max_temp$temp_int)) - min_tmin + 1]
-saveRDS(polygon_tmin, "../Figures.Publish/Figure2/Figure.2b2.rda")
+saveRDS(polygon_tmin, "../Figures.Publish/Data/Figure2/Figure.2b2.rda")
 p_asia_tmin<-ggplot(polygon_tmin, aes(colour=v)) +
   geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
   geom_sf() + 
@@ -348,7 +348,7 @@ mycol <- Blues((max_prcp - min_prcp + 1) * 1.5)[((max_prcp - min_prcp + 1) * 0.5
 polygon_prcp$color<-mycol[floor(polygon_prcp$v) - min_prcp + 1]
 
 #subcols<-mycol[c(min(polygon_max_temp$temp_int):max(polygon_max_temp$temp_int)) - min_prcp + 1]
-saveRDS(polygon_prcp, "../Figures.Publish/Figure2/Figure.2b3.rda")
+saveRDS(polygon_prcp, "../Figures.Publish/Data/Figure2/Figure.2b3.rda")
 p_asia_prcp<-ggplot(polygon_prcp, aes(colour=v)) +
   geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
   geom_sf() + 
@@ -414,7 +414,7 @@ cols_blue<-'#4477AA'
 outlier_ids<-readRDS("../Data/outliers/outliers_3SD.rda")
 seeds$color<-"Normal"
 seeds[which(seeds$Name %in% outlier_ids$global_id), "color"]<-"Outliers"
-saveRDS(seeds, "../Figures.Publish/Figure2/Figure.2a.rda")
+saveRDS(seeds, "../Figures.Publish/Data/Figure2/Figure.2a.rda")
 
 p_seeds1<-ggplot(polygon_tmax) +
   #geom_sf(data = world, color="#e3e3e3", fill="#e3e3e3") +
@@ -444,7 +444,7 @@ p_seeds2<-ggplot(polygon_tmax) +
 p_seeds<-ggarrange(p_seeds1, p_seeds2, nrow=1)
 p_seeds<-annotate_figure(p_seeds, top = "Seed cells")
 
-ggsave(p_seeds, filename="../Figures.Publish/Figure2/Figure.2a.pdf", width=12, height=6, bg="white")
+#ggsave(p_seeds, filename="../Figures.Publish/Figure2/Figure.2a.pdf", width=12, height=6, bg="white")
 
 #species richness at the beginning
 diversity_initial_details<-readRDS("../Data/diversity/diversity_all_initial_year.rda")
@@ -501,9 +501,9 @@ p.richness<-create_fig(diversity_final[group=="conservatism"], "Niche conservati
 p.richness.map<-create_fig_map(diversity_final[group=="conservatism"], "Niche conservatism", 
                                with_label=T, legend_label="Species numbers", with_lat = F)
 
-fwrite(diversity_final, "../Figures.Publish/Figure2/Figure.2d.csv")
-ggsave(p.richness, filename="../Figures.Publish/Figure2/Figure.2d.pdf",
-       width=6, height=6, bg="white")
+fwrite(diversity_final, "../Figures.Publish/Data/Figure2/Figure.2d.csv")
+#ggsave(p.richness, filename="../Figures.Publish/Figure2/Figure.2d.pdf",
+#       width=6, height=6, bg="white")
 
 ##lat gradient
 mammals<-st_read("../Shape/IUCN_Richness/Mammals/richness.shp")
@@ -535,7 +535,7 @@ n_splist_df_ratio_lat<-all_dt[, .(mean_N_SPECIES=mean(mean_N_SPECIES),
                                   CI_mean_N_SPECIES_scaled=my_CI(mean_N_SPECIES_scaled),
                                   N=.N),
                               by=list(lat_band, group)]
-fwrite(n_splist_df_ratio_lat, "../Figures.Publish/Figure2/Figure.2e.csv")
+fwrite(n_splist_df_ratio_lat, "../Figures.Publish/Data/Figure2/Figure.2e.csv")
 p_lat_band<-ggplot(n_splist_df_ratio_lat)+
   
   #geom_point(aes(x=N_Species, y=mid, color=label))+
@@ -577,13 +577,13 @@ p_seeds2_part
 #p_seeds
 #p.richness
 #p_line
-ggsave(p_env, filename="../Figures.Publish/Figure2/Figure.2b.pdf", width=6, height=8)
+#ggsave(p_env, filename="../Figures.Publish/Figure2/Figure.2b.pdf", width=6, height=8)
 pp1<-ggarrange(plotlist=list(p_seeds, p_env), ncol=2, nrow=1, widths=c(3, 1))
 #pp1.5<-ggarrange(plotlist=list(p.richness.initial, p_lat_band_initial), ncol=2, nrow=1, widths=c(3, 1))
 pp2<-ggarrange(plotlist=list(p.richness, p_lat_band), ncol=2, nrow=1, widths=c(3, 1))
 pp<-ggarrange(plotlist=list(pp1, p_line, pp2), ncol=1, nrow=3, heights=c(2, 1, 2, 2))
-ggsave(pp, filename="../Figures.Publish/Figure2/Figure2.pdf",
-       width=12, height=12, bg="white")
+#ggsave(pp, filename="../Figures.Publish/Figures/Figure2/Figure2.pdf",
+#       width=12, height=12, bg="white")
 
 
 

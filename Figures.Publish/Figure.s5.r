@@ -48,9 +48,9 @@ diversity_final[group=="conservatism" & medium_N_SPECIES==max(diversity_final[gr
 diversity_final$N_SPECIES<-round(diversity_final$mean_N_SPECIES)
 #diversity_final[lon<(-20) & lat<11]$N_SPECIES<-
 #  round(diversity_final[lon<(-20) & lat<11]$N_SPECIES * 2)
-fwrite(diversity_final, "../Figures.Publish/Figure.S5/Figure.S5.csv")
+fwrite(diversity_final, "../Figures.Publish/Data/Figure.S5/Figure.S5.csv")
 p1<-create_fig_map(diversity_final[group=="conservatism"], label=evo_types_label_line[1], polygon=NULL)
-p1
+#p1
 
 p2_2<-create_fig_map(diversity_final[group=="shift-directional" & directional_speed==0.1], 
                      label=evo_types_label_line[2], polygon=NULL)
@@ -86,10 +86,10 @@ diversity_bird<-data.table(diversity_bird)
 diversity_bird[is.na(richness)]$richness<-0
 diversity_bird$N_SPECIES<-diversity_bird$richness
 
-fwrite(diversity_bird, "../Figures.Publish/Figure.S5/Figure.S5.bird.csv")
+fwrite(diversity_bird, "../Figures.Publish/Data/Figure.S5/Figure.S5.bird.csv")
 p_bird<-create_fig_map(diversity_bird, 
                        "Birds", polygon=NULL, with_label=T)
-p_bird
+#p_bird
 
 diversity_mammal<-read_sf("../Shape/IUCN_Richness/Mammals/richness.shp")
 diversity_mammal$geometry<-NULL
@@ -98,10 +98,10 @@ diversity_mammal<-data.table(diversity_mammal)
 diversity_mammal[is.na(richness)]$richness<-0
 diversity_mammal$N_SPECIES<-diversity_mammal$richness
 
-fwrite(diversity_mammal, "../Figures.Publish/Figure.S5/Figure.S5.mammal.csv")
+fwrite(diversity_mammal, "../Figures.Publish/Data/Figure.S5/Figure.S5.mammal.csv")
 p_mammal<-create_fig_map(diversity_mammal, 
                          label="Mammals", polygon=NULL, with_label=T)
-p_mammal
+#p_mammal
 
 #ggsave(p_bird, filename="../Figures/Figure6.Species.Richness/species.richness.bird.map.png")
 #ggsave(p_mammal, filename="../Figures/Figure6.Species.Richness/species.richness.mammal.map.png")
@@ -115,5 +115,5 @@ pp<-ggarrange(plotlist=list(pp1,  NULL,
                             p2, p3, p5), nrow=5, heights = c(1, -0.05, 1,1,1))
 
 
-ggsave(pp, filename="../Figures.Publish/Figure.S5/Figure.S5.pdf", 
-       width=16, height=10, bg="white")
+#ggsave(pp, filename="../Figures.Publish/Figures/Figure.S5/Figure.S5.pdf", 
+#       width=16, height=10, bg="white")

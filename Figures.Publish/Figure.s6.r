@@ -63,7 +63,7 @@ df_result_list<-formatLabelX(df_result_list)
 
 fwrite(df_result_list[!is.na(NB) & !is.na(DA), 
                       c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
-       "../Figures.Publish/Figure.S6/Figure.S6.csv")
+       "../Figures.Publish/Data/Figure.S6/Figure.S6.csv")
 coms<-coms[c(5,6,8,9)]
 N_list<-list()
 for (i in c(1:nrow(coms))){
@@ -129,8 +129,8 @@ for (i in c(1:nrow(coms))){
   #scale_x_discrete(guide = guide_axis(n.dodge = 2))
   p
   
-  ggsave(p, filename=sprintf("../Figures.Publish/Figure.S6/Figure.S6_%s_%s.png", com$nb, com$da),
+  ggsave(p, filename=sprintf("../Figures.Publish/Figures/Figure.S6/Figure.S6_%s_%s.png", com$nb, com$da),
          width=12, height=3)
-  ggsave(p, filename=sprintf("../Figures.Publish/Figure.S6/Figure.S6_%s_%s.pdf", com$nb, com$da),
+  ggsave(p, filename=sprintf("../Figures.Publish/Figures/Figure.S6/Figure.S6_%s_%s.pdf", com$nb, com$da),
          width=12, height=3)
 }

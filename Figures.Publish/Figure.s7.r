@@ -49,8 +49,8 @@ p<-ggplot(df_result)+geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alt
 
 #scale_x_discrete(guide = guide_axis(n.dodge = 2))
 p
-
-fwrite(df_result, "../Figures.Publish/Figure.S7/Figure.S7.csv")
-ggsave(p, filename="../Figures.Publish/Figure.S7/Figure.S7.pdf",
-       width=6, height=4)
+df_result$N<-NULL
+fwrite(df_result, "../Figures.Publish/Data/Figure.S7/Figure.S7.csv")
+#ggsave(p, filename="../Figures.Publish/Figures/Figure.S7/Figure.S7.pdf",
+#       width=6, height=4)
 

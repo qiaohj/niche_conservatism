@@ -11,39 +11,51 @@ source("commons/functions.r")
 d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
 d<-formatLabels(d)
 item<-d[from>=-1000]
-item<-item[from %in% seq(from=-1000, to=-100, by=100)]
 item$net_dr
 colnames(item)
 dim(item)
 item[net_dr==-1]
 range(item$R_SPECIATION_SPECIES)
-#item_e<-item[R_EXTINCTION_SPECIES>0]
+item_e<-item[R_EXTINCTION_SPECIES>0]
 item_e<-item
-
+item_e<-item_e[from %in% seq(-1000, -100, by=100)]
 
 N_item<-item_e[, .(N=.N),
                by=list(label_x)]
-fwrite(N_item, "../Figures.Publish/Figure3/N.Figure.3.csv")
-
 
 item_extinction<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
-                            #N=.N,
+                            N=.N,
                             label="R_EXTINCTION_SPECIES"),
-                        by=list(from, label_x, label_line, global_id, nb, da)]
+                        by=list(from, label_x, label_line)]
 item_speciation<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
-                            #N=.N,
+                            N=.N,
                             label="R_SPECIATION_SPECIES"),
-                        by=list(from, label_x, label_line, global_id, nb, da)]
+                        by=list(from, label_x, label_line)]
 item_ndr<-item_e[, .(v=mean(net_dr),
-                     #N=.N,
+                     N=.N,
                      label="net_dr"),
-                 by=list(from, label_x, label_line, global_id, nb, da)]
+                 by=list(from, label_x, label_line)]
+item_sd1<-rbindlist(list(item_ndr, item_speciation, item_extinction))
+
+item_extinction<-item_e[, .(v=mean(R_EXTINCTION_SPECIES)/1e3,
+                            N=.N,
+                            label="R_EXTINCTION_SPECIES"),
+                        by=list(from, label_x, label_line, da, nb)]
+item_speciation<-item_e[, .(v=mean(R_SPECIATION_SPECIES)/1e3,
+                            N=.N,
+                            label="R_SPECIATION_SPECIES"),
+                        by=list(from, label_x, label_line, da, nb)]
+item_ndr<-item_e[, .(v=mean(net_dr),
+                     N=.N,
+                     label="net_dr"),
+                 by=list(from, label_x, label_line, da, nb)]
+
+
 item_sd<-rbindlist(list(item_ndr, item_speciation, item_extinction))
 type.labs <- c("net_dr"= "net per capita diversification rate",
                "R_EXTINCTION_SPECIES"=  "net extinction",
                "R_SPECIATION_SPECIES" ="net speciation")
 table(item_e$label)
-
 p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line))+ 
   
   #ggdist::stat_halfeye(
@@ -51,7 +63,7 @@ p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line
   #  justification = -0.15,
   #  .width = 0,
   #  point_colour = NA) +
-  geom_boxplot(
+  geom_boxplot(data=item_sd1,
     width = 0.2,
     outlier.colour = NA,
     alpha = 0.5)+
@@ -75,9 +87,12 @@ p_boxplot<-ggplot(item_sd, aes(x=v, y=label_x, fill=label_line, color=label_line
   facet_wrap(~label, scale="free_x", labeller = 
                labeller(label = type.labs), nrow=1, ncol=3)
 
+p_boxplot
 
-fwrite(item_sd, "../Figures.Publish/Figure3/Figure.3b.csv")
-ggsave(p_boxplot, filename="../Figures.Publish/Figure3/Figure.3b.png")
+fwrite(item_sd, "../Figures.Publish/Data/Figure3/Figure.3b.csv")
+item_N<-item_sd[, .(N=.N), by=list(label, label_x)]
+fwrite(item_sd, "../Figures.Publish/Data/Figure3/Figure.3b.csv")
+#ggsave(p_boxplot, filename="../Figures.Publish/Figure3/Figure.3b.png")
 
 
 df_result<-readRDS("../Figures/Figure4.Tukey.Test/TukeyHSD_by_species.fixed.window.rda")
@@ -109,7 +124,7 @@ df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
 df_result<-formatLabelX (df_result)
 
 fwrite(df_result[, c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
-       "../Figures.Publish/Figure3/Figure.3c.csv")
+       "../Figures.Publish/Data/Figure3/Figure.3c.csv")
 p_tukey<-ggplot(df_result)+
   geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alternative, width=0.2))+
   geom_vline(aes(xintercept=0), linetype=2, color="#444444")+
@@ -139,7 +154,7 @@ p_tukey<-ggplot(df_result)+
 
 #scale_x_discrete(guide = guide_axis(n.dodge = 2))
 p_tukey
-ggsave(p_tukey, filename="../Figures.Publish/Figure3/Figure.3c.pdf")
+#ggsave(p_tukey, filename="../Figures.Publish/Figure3/Figure.3c.pdf")
 
 env_curve<-readRDS("../Figures/Figure1.Overview/Data/env_yearly_avg.rda")
 env_curve<-env_curve[var=="Debiased_Minimum_Monthly_Temperature"]
@@ -391,6 +406,8 @@ p_all<-ggarrange(plotlist=list(p_symbol, p_boxplot, p_tukey),
                  nrow=3, ncol=1, heights = c(0.8, 1.2, 1),
                  labels=c("a", "b", "c"))
 
-ggsave(p_all, filename="../Figures.Publish/Figure3/Figure.3.pdf",
-       width=12.5, height=9)
+ggsave(p_all, filename="../Figures.Publish/Figures/Figure3/Figure.3.pdf",
+       width=12.5, height=9, bg="white")
 
+#ggsave(p_all, filename="../Figures.Publish/Figures/Figure3/Figure.3.png",
+#       width=12.5, height=9, bg="white")

@@ -71,7 +71,7 @@ p1<-ggplot(item_g, aes(x=(year-1200) * 0.1))+
   theme(axis.title = element_blank(),
         axis.text.x = element_blank())
 p1
-fwrite(item_g, "../Figures.Publish/Figure.S2/Figure.S2a.csv")
+fwrite(item_g, "../Figures.Publish/Data/Figure.S2/Figure.S2a.csv")
 
 item<-df_all_se_gg[directional_speed==0.5]
 item_g<-rbindlist(list(data.table(V_L="Lower limit of precipitation",
@@ -99,7 +99,7 @@ item_g$V_L<-factor(item_g$V_L, levels = c("Lower limit of temperature",
                                           "Upper limit of temperature",
                                           "Lower limit of precipitation", 
                                           "Upper limit of precipitation"))
-fwrite(item_g, "../Figures.Publish/Figure.S2/Figure.S2b.csv")
+fwrite(item_g, "../Figures.Publish/Data/Figure.S2/Figure.S2b.csv")
 
 p2<-ggplot(item_g, aes(x=(year-1200) * 0.1))+
   geom_line(aes(color=V_L, y=V))+
@@ -143,7 +143,7 @@ item_g$V_L<-factor(item_g$V_L, levels = c("Lower limit of temperature",
                                           "Upper limit of temperature",
                                           "Lower limit of precipitation", 
                                           "Upper limit of precipitation"))
-fwrite(item_g, "../Figures.Publish/Figure.S2/Figure.S2c.csv")
+fwrite(item_g, "../Figures.Publish/Data/Figure.S2/Figure.S2c.csv")
 
 p3<-ggplot(item_g, aes(x=(year-1200) * 0.1))+
   geom_line(aes(color=V_L, y=V))+
@@ -159,6 +159,7 @@ p3<-ggplot(item_g, aes(x=(year-1200) * 0.1))+
 p3
 p<-ggarrange(p1, p2, p3, ncol=1, common.legend = T, legend = "bottom")  
 p
-fwrite(item_g, "../Figures.Publish/Figure.S2/Figure.S2a.csv")
 
-ggsave(p, filename="../Figures.Publish/Figure.S2/Figure.S2.pdf", width=10, height=8, bg="white")
+
+ggsave(p, filename="../Figures.Publish/Figures/Figure.S2/Figure.S2.pdf", width=10, height=8, bg="white")
+#ggsave(p, filename="../Figures.Publish/Figures/Figure.S2/Figure.S2.png", width=10, height=8, bg="white")

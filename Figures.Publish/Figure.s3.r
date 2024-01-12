@@ -6,7 +6,7 @@ setwd("/media/huijieqiao/Butterfly/Niche_Conservatism/RScript")
 source("commons/functions.r")
 
 d<-readRDS("../Data/tslm_and_glm/d_ndr.rda")
-d<-d[floor((d$to+0)/100)==(d$to+0)/100]
+d<-d[from %in% seq(-1000, -100, 100)]
 coms<-data.table(expand.grid(nb=c("NB"), da=c("DA")))
 i=1
 var="N_GROUP"
@@ -50,7 +50,6 @@ for (i in c(1:nrow(coms))){
                 sd_net_dr=sd(net_dr)),
             by=list(from, to, evo_type, species_evo_type, directional_speed, label, nb, da)]
   }
-  
   d_se<-formatLabels(d_se)
   p1<-ggplot(d_se)+geom_line(aes(x=to/10, y=R_SPECIATION_SPECIES/1000, 
                                  color=label_line, 
@@ -92,7 +91,7 @@ for (i in c(1:nrow(coms))){
     theme_bw()+
     theme(legend.title = element_blank())
   p3
-  fwrite(d_se, "../Figures.Publish/Figure.S3/Figure.S3.csv")
+  fwrite(d_se, "../Figures.Publish/Data/Figure.S3/Figure.S3.csv")
     
   width<-12
   height<-9
@@ -122,6 +121,6 @@ for (i in c(1:nrow(coms))){
   p
   
   
-  ggsave(p, filename="../Figures.Publish/Figure.S3/Figure.S3.pdf", 
+  ggsave(p, filename="../Figures.Publish/Figures/Figure.S3/Figure.S3.pdf", 
          width=width, height=height, bg = "white")
 }

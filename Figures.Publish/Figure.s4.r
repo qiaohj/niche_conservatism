@@ -12,7 +12,7 @@ d_se_all<-readRDS("../Figures/Figure3.SP.EX.SPECIES/figure_data.rda")
 d_se_all<-formatLabels(d_se_all)
 d_se_all[is.na(nb)]$nb<-"ALL"
 d_se_all[is.na(da)]$da<-"ALL"
-fwrite(d_se_all, "../Figures.Publish/Figure.S4/Figure.S4.csv")
+fwrite(d_se_all, "../Figures.Publish/Data/Figure.S4/Figure.S4.csv")
 p1<-ggplot(d_se_all, aes(x=label_x, y=N_SPECIATION))+
   geom_errorbar(aes(color=nb, width=0.3, fill=da,
                     ymin=N_SPECIATION-CI_N_SPECIATION, 
@@ -82,6 +82,6 @@ p<-ggarrange(plotlist=list(ggarrange(plotlist=list(p1, p2), nrow=2, ncol=1), p3)
              nrow=2, ncol=1, common.legend = F, heights=c(1.7, 1))
 p
 
-ggsave(p, filename="../Figures.Publish/Figure.S4/Figure.S4.pdf", 
-       width=13, height=10)
+#ggsave(p, filename="../Figures.Publish/Figures/Figure.S4/Figure.S4.pdf", 
+#       width=13, height=10)
 

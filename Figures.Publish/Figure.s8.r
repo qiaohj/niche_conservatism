@@ -43,7 +43,7 @@ com<-coms[1]
   
   table(df_result$alternative)
   df_result$diff_label<-sprintf("%.3f %s", df_result$diff_str, df_result$p_label)
-  f
+  
   
   p<-ggplot(df_result)+geom_errorbarh(aes(y=label_x, xmin=lwr, xmax=upr, color=alternative), height=0.1)+
     geom_vline(aes(xintercept=0), linetype=2, color="#444444")+
@@ -60,9 +60,8 @@ com<-coms[1]
           legend.title = element_blank(),
           legend.background = element_rect(fill=bg),
           legend.key.size = unit(5, "mm"),
-          legend.text = element_text(size=7, margin = margin(t = 5)),
+          legend.text = element_text(size=7),
           legend.box.spacing = unit(1, "mm"),
-          legend.box.margin = margin(0, 0, 0, 0),
           legend.spacing.y = unit(1.0, 'mm'),
           ggh4x.axis.nestline.y = element_line(linewidth = 1.1),
           ggh4x.axis.nesttext.y = element_text(size = 10, face ="bold"),
@@ -74,9 +73,9 @@ com<-coms[1]
   p
   
   fwrite(df_result[, c("diff", "lwr", "upr", "p_adj", "label_x", "type")], 
-        "../Figures.Publish/Figure.S8/Figure.S8.csv")
+        "../Figures.Publish/Data/Figure.S8/Figure.S8.csv")
   
-  ggsave(p, filename="../Figures.Publish/Figure.S8/Figure.S8.pdf",
+  ggsave(p, filename="../Figures.Publish/Figures/Figure.S8/Figure.S8.pdf",
          width=10, height=3)
   
   

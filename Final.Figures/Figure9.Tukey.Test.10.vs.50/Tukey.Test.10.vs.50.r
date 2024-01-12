@@ -13,9 +13,7 @@ if (F){
   d_null$tag<-1
   d_with_null<-merge(d, d_null, 
                      by=c("from", "to", "nb", "da", "global_id"))
-  ggplot(d)+geom_histogram(aes(y=net_dr))+facet_wrap(~label)
-  cor(d$N_SPECIES, d$net_dr)
-  cor(d$N_SPECIES, d$N_SPECIATION)
+  
   coms<-data.table(expand.grid(nb=c(NA, "BROAD", "NARROW"), da=c(NA, "GOOD", "POOR")))
   i=1
   df_result_list<-list()
@@ -23,6 +21,7 @@ if (F){
     com<-coms[i]
     print(i)
     item<-d[from>=-1000]
+    item<-item[from %in% seq(-1000, -100, 100)]
     if (!is.na(com$nb)){
       item<-item[nb==com$nb]
     }
@@ -31,6 +30,7 @@ if (F){
     }
     
     item<-formatLabels(item)
+    item_N<-item[, .(N=.N), by=label]
     df_net_dr<-TukeyHSD_B("net_dr", item, "0.5")
     df_net_dr<-df_net_dr[label %in% c("expansion-directional (0.1)-expansion-directional (0.5)",
                                       "expansion-omnidirectional (0.1)-expansion-omnidirectional (0.5)",
