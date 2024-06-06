@@ -85,11 +85,17 @@ for (i in c(1:nrow(coms))){
   saveRDS(df_result, sprintf("../Figures/20230616/t.test/t.test_by_species_%s_%s_paired_fixed_window.rda", com$nb, com$da))
   write.csv(df_result, sprintf("../Figures/20230616/t.test/t.test_by_species_%s_%s_paired_fixed_window.csv", com$nb, com$da), row.names = F)
   
-  p<-ggplot(df_result[side!="two.sided" & p_label!=""])+
+  df1<-df_result[side!="two.sided" & p_label!=""]
+  df2<-unique(df_result[side=="two.sided", c("V1", "V2", "var")])
+  df1<-merge(df1, df2, by=c("V1", "V2", "var"), all=T)
+  df1[is.na(p_label)]$p_label<-"-"
+  df1[is.na(side)]$side<-"no sig dif"
+  
+  p<-ggplot(df1)+
     geom_tile(aes(x=var, y=V1, fill=side))+
     geom_text(aes(x=var, y=V1, label=p_label))+
     ggtitle(sprintf("%s_%s", com$nb, com$da))+
-    scale_fill_manual(values=c("#D55E00", "#0072B2", "white"),
+    scale_fill_manual(values=c("#D55E00", "#0072B2", "lightgrey"),
                       breaks=c("greater", "less", "no sig dif"))
   #scale_x_discrete(guide = guide_axis(n.dodge = 2))
   p
