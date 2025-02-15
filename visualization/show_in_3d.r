@@ -267,6 +267,6 @@ for (i in c(max(df$year):min(df$year))){
 }
 
 cd /media/huijieqiao/Butterfly/Niche_Conservatism/Figures/Example/27464_GOOD_NARROW_2_0.1_0/by_year
-ffmpeg -r 5 -start_number -1198 -i y%d.png -y ../27464_GOOD_NARROW_2_0.1_0.mp4
+ffmpeg -r 5 -start_number --1199 -i y%d.png -y example.mp4
 
 
